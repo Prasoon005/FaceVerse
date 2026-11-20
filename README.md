@@ -255,7 +255,7 @@ stored, every table has Row Level Security, and you can export or delete your bi
   your own data. If the liveness "turn left/right" prompts feel swapped, flip `yawLeftSign`.
 - First visit to a camera page downloads ~12 MB of models; the first voice feature downloads
   ~100 MB (both cached afterwards).
-- Voice threshold (0.86, from the model card) and phrase checking are starting values. Speech
+- Voice threshold (0.80, calibrated from real logins) and phrase checking are starting values. Speech
   transcription only works in browsers with the Web Speech API (Chrome, Edge, Safari); elsewhere
   only the voice itself is checked.
 - Liveness and the phrase check run in the browser, so the server can only re-verify the

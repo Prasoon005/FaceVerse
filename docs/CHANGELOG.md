@@ -64,8 +64,9 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ### Deviations from the spec
 
-- **Voice threshold 0.86** instead of 0.70: 0.86 is the value from the model card for
-  `wavlm-base-plus-sv`. Calibrate with the scores on Settings → Security.
+- **Voice threshold 0.80** instead of 0.70. It started at the model card's 0.86, but real logins
+  with a laptop mic scored 0.73–0.93 for the right person, and most were just under 0.86. Lowered
+  to 0.80 from those attempts (Settings → Security shows the scores).
 - **`verify_face` / `verify_voice` also require `people.owner_id = target_user`.** The spec's
   version only checked `linked_user_id`, and because users can set that column on people they
   own, someone could enroll their own face, link it to another account and log in as that user.

@@ -99,8 +99,10 @@ a real browser, so they are covered by the checklist below.
 ## Tuning tips
 
 - After a few logins, look at the voice scores in Settings → Security. If your own voice scores
-  are just under 0.86, lower `voice.match` in `src/config/recognition.ts` a little (e.g. 0.82). If
-  someone else got close, raise it.
+  are just under the threshold (0.80), lower `voice.match` in `src/config/recognition.ts` a little.
+  If someone else got close, raise it.
+- Voice matching uses your **best** sample, so recording 3 more phrases where you usually log in
+  (People → your page → Add voice) raises your scores more safely than lowering the threshold.
 - Record voice samples in a quiet room at a normal volume, like when you log in.
 - Speech transcription uses your browser language when it's English (e.g. `en-IN`). If phrases
   are often misheard, speak the digits clearly ("four", "seven").

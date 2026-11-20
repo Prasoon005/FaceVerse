@@ -146,7 +146,7 @@ Login:  /biometric-login
 2. Rate limits: 5 failures / 15 min per account, 10 per IP (HMAC-hashed IP in `auth_attempts`).
 3. Looks up the user and requires `profiles.biometric_login_enabled`. Unknown emails and disabled
    accounts get the same "not set up" answer.
-4. Checks `verify_face` ≥ face match threshold, `verify_voice` ≥ 0.86, liveness passed, and phrase
+4. Checks `verify_face` ≥ face match threshold, `verify_voice` ≥ 0.80, liveness passed, and phrase
    score ≥ 70% when transcription ran. Failures return reasons, never scores.
 5. Logs the attempt. On success, `auth.admin.generateLink({ type: "magiclink" })` creates a
    one-time token (no email is sent) that is immediately exchanged with `verifyOtp` on the

@@ -20,10 +20,11 @@ export const recognitionConfig = {
   voice: {
     /**
      * Cosine similarity at or above this is the same speaker. The spec's starting point
-     * was 0.70; the model card for wavlm-base-plus-sv recommends 0.86. Calibrate with the
-     * scores shown on Settings → Security.
+     * was 0.70 and the wavlm-base-plus-sv model card suggests 0.86 (clean studio audio).
+     * Real logins with a laptop mic scored 0.73–0.93 for the right person, so 0.86
+     * rejected most of them. Calibrate with the scores on Settings → Security.
      */
-    match: 0.86,
+    match: 0.8,
     embeddingSize: 512,
     model: "Xenova/wavlm-base-plus-sv",
     sampleRate: 16_000,
