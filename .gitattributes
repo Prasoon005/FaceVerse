@@ -1,0 +1,8 @@
+# Keep LF line endings everywhere (Prettier and CI expect LF, even on Windows).
+* text=auto eol=lf
+
+# Binary files
+*.pdf binary
+*.ico binary
+*.png binary
+*.jpg binary
