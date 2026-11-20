@@ -41,6 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Human model files (copied by scripts/copy-models.mjs on install)
+# AI model + runtime files (copied by scripts/copy-models.mjs on install)
 /public/models/*
 !/public/models/.gitkeep
+/public/ort/
