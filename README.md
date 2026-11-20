@@ -21,15 +21,15 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 
 ## Status
 
-| Phase | Scope                                                      | Status   |
-| ----- | ---------------------------------------------------------- | -------- |
-| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done  |
-| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done  |
-| 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
-| 4     | Smart visitor log                                          | ⏳ Next  |
-| 5     | Event photo finder                                         | Planned  |
-| 6     | Privacy, polish & v1 release                               | Planned  |
-| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned  |
+| Phase | Scope                                                      | Status  |
+| ----- | ---------------------------------------------------------- | ------- |
+| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done |
+| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done |
+| 3     | Voice engine + multi-factor biometric login                | ✅ Done |
+| 4     | Smart visitor log                                          | ⏳ Next |
+| 5     | Event photo finder                                         | Planned |
+| 6     | Privacy, polish & v1 release                               | Planned |
+| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned |
 
 See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 [docs/phases/](docs/phases/) for each phase's test checklist.
