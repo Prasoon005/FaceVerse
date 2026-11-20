@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Camera, CircleCheck, CircleX, Plus } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
@@ -8,11 +9,13 @@ import { CameraView } from "@/components/camera/camera-view";
 import { FaceOverlay } from "@/components/camera/face-overlay";
 import { ModelLoader } from "@/components/camera/model-loader";
 import { PermissionGate } from "@/components/camera/permission-gate";
+import { ScanOverlay } from "@/components/camera/scan-overlay";
 import { Button } from "@/components/ui/button";
 import { recognitionConfig } from "@/config/recognition";
 import { useCamera } from "@/hooks/use-camera";
 import { useDetectionLoop } from "@/hooks/use-detection-loop";
 import { useFaceEngine } from "@/hooks/use-face-engine";
+import { useSoundFeedback } from "@/hooks/use-sound-feedback";
 import { captureFaceThumbnail } from "@/lib/ai/capture";
 import { qualityCheck, qualityLabels, type QualityReason, qualityScore } from "@/lib/ai/quality";
 import type { DetectResult, FaceResult } from "@/lib/ai/types";
@@ -67,7 +70,10 @@ export function FaceCaptureStep({
 }) {
   const camera = useCamera();
   const engine = useFaceEngine();
+  const sound = useSoundFeedback();
   const [samples, setSamples] = useState<CapturedSample[]>([]);
+  /** Bumped on every capture to replay the camera flash. */
+  const [flash, setFlash] = useState(0);
   const [frame, setFrame] = useState<DetectResult | null>(null);
   const [reasons, setReasons] = useState<QualityReason[]>(["no_face"]);
   const [poseOk, setPoseOk] = useState(false);
@@ -99,6 +105,9 @@ export function FaceCaptureStep({
       ]);
       setWantsExtra(false);
       stableRef.current = 0;
+      setFlash((n) => n + 1);
+      // The last required pose gets a success chime instead of the shutter.
+      sound.play(samples.length + 1 === POSES.length ? "success" : "capture");
     } catch {
       toast.error("Couldn't capture that frame, please try again.");
     } finally {
@@ -171,6 +180,19 @@ export function FaceCaptureStep({
               }))}
             />
           ) : null}
+          {ready && pose && goodFrame && poseOk ? <ScanOverlay label="Hold still…" /> : null}
+          <AnimatePresence>
+            {flash > 0 ? (
+              <motion.div
+                key={flash}
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-white"
+                initial={{ opacity: 0.75 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              />
+            ) : null}
+          </AnimatePresence>
           <PermissionGate
             status={camera.status}
             error={camera.error}
@@ -248,7 +270,13 @@ export function FaceCaptureStep({
                   className="relative aspect-square overflow-hidden rounded-lg border bg-muted"
                 >
                   {sample ? (
-                    <>
+                    <motion.div
+                      key={sample.previewUrl}
+                      className="size-full"
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 320, damping: 20 }}
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element -- local object URL preview */}
                       <img
                         src={sample.previewUrl}
@@ -266,7 +294,7 @@ export function FaceCaptureStep({
                       <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1 font-mono text-[10px]">
                         {Math.round(sample.quality * 100)}%
                       </span>
-                    </>
+                    </motion.div>
                   ) : (
                     <span className="grid size-full place-items-center text-xs text-muted-foreground">
                       {POSES[i]?.key === "straight" ? "Front" : `Side ${i}`}

@@ -3,8 +3,10 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { CircleCheck, Radar, User, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useSoundFeedback } from "@/hooks/use-sound-feedback";
 
 const BURST = Array.from({ length: 14 }, (_, i) => {
   const angle = (i / 14) * Math.PI * 2;
@@ -23,6 +25,8 @@ export function DoneStep({
   onEnrollAnother: () => void;
 }) {
   const reduceMotion = useReducedMotion();
+  const { play } = useSoundFeedback();
+  useEffect(() => play("success"), [play]);
 
   return (
     <div className="grid justify-items-center gap-4 py-10 text-center">

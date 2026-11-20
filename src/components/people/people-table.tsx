@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Eye, MoreHorizontal, Trash2, UserPlus } from "lucide-react";
+import { Camera, Eye, Mic, MoreHorizontal, Trash2, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -70,7 +70,11 @@ export function PeopleTable() {
         }),
         helper.accessor("face_samples", {
           header: "Samples",
-          cell: ({ getValue }) => <span className="font-mono tabular-nums">{getValue()}</span>,
+          cell: ({ row }) => (
+            <span className="font-mono text-xs tabular-nums">
+              {row.original.face_samples} face · {row.original.voice_samples} voice
+            </span>
+          ),
         }),
         helper.accessor((p) => p.last_seen_at ?? "", {
           id: "last_seen",
@@ -107,6 +111,11 @@ export function PeopleTable() {
                   <DropdownMenuItem asChild>
                     <Link href={`/enroll?person=${row.original.id}`}>
                       <Camera aria-hidden /> Add samples
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href={`/enroll?person=${row.original.id}&mode=voice`}>
+                      <Mic aria-hidden /> Add voice
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />

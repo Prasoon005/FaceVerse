@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Camera, Link2, ScanFace, Trash2 } from "lucide-react";
+import { AudioLines, Camera, Link2, Mic, ScanFace, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -15,7 +15,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { classifyFaceSimilarity } from "@/config/recognition";
-import { deleteFaceSample, deletePerson, getPerson, peopleKeys } from "@/lib/data/people";
+import {
+  deleteFaceSample,
+  deletePerson,
+  deleteVoiceSamples,
+  getPerson,
+  peopleKeys,
+} from "@/lib/data/people";
 import { formatDateTime, formatPercent, formatRelative } from "@/lib/format";
 
 import { ListTypeBadge } from "./list-type-badge";
@@ -34,6 +40,11 @@ export function PersonDetail({ id }: { id: string }) {
     mutationFn: deleteFaceSample,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: peopleKeys.all }),
     onError: (err) => toast.error("Couldn't delete sample", { description: err.message }),
+  });
+  const removeVoice = useMutation({
+    mutationFn: () => deleteVoiceSamples(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: peopleKeys.all }),
+    onError: (err) => toast.error("Couldn't delete voice samples", { description: err.message }),
   });
 
   if (isPending) {
@@ -88,6 +99,11 @@ export function PersonDetail({ id }: { id: string }) {
           <Button variant="outline" asChild>
             <Link href={`/enroll?person=${person.id}`}>
               <Camera aria-hidden /> Add samples
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/enroll?person=${person.id}&mode=voice`}>
+              <Mic aria-hidden /> Add voice
             </Link>
           </Button>
           <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
@@ -146,6 +162,43 @@ export function PersonDetail({ id }: { id: string }) {
                   </li>
                 ))}
               </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="lg:order-last">
+          <CardHeader>
+            <CardTitle>Voice samples</CardTitle>
+            <CardDescription>
+              {person.voice_samples} stored speaker embedding
+              {person.voice_samples === 1 ? "" : "s"}. Needed for biometric login.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {person.voice_samples === 0 ? (
+              <EmptyState
+                title="No voice samples"
+                description="Record 3 short phrases to enable voice verification."
+                action={
+                  <Button size="sm" asChild>
+                    <Link href={`/enroll?person=${person.id}&mode=voice`}>Add voice samples</Link>
+                  </Button>
+                }
+              />
+            ) : (
+              <div className="flex flex-wrap items-center gap-3 text-sm">
+                <AudioLines className="size-4 text-muted-foreground" aria-hidden />
+                <span className="font-medium">{person.voice_samples} phrases</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto"
+                  disabled={removeVoice.isPending}
+                  onClick={() => removeVoice.mutate()}
+                >
+                  <Trash2 aria-hidden /> Delete voice samples
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

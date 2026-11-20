@@ -131,6 +131,26 @@ export async function addFaceSamples(personId: string, samples: FaceSampleInput[
   if (error) throw error;
 }
 
+export async function addVoiceSamples(personId: string, embeddings: Float32Array[]) {
+  const { supabase, userId } = await requireUserId();
+  const { error } = await supabase.from("voice_embeddings").insert(
+    embeddings.map((embedding) => ({
+      person_id: personId,
+      owner_id: userId,
+      embedding: toPgVector(embedding),
+    })),
+  );
+  if (error) throw error;
+}
+
+export async function deleteVoiceSamples(personId: string) {
+  const { error } = await createClient()
+    .from("voice_embeddings")
+    .delete()
+    .eq("person_id", personId);
+  if (error) throw error;
+}
+
 export async function deleteFaceSample(sampleId: string) {
   const { error } = await createClient().from("face_embeddings").delete().eq("id", sampleId);
   if (error) throw error;

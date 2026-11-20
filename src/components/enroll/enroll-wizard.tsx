@@ -8,8 +8,10 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StepperRail } from "@/components/shared/stepper-rail";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { VoiceSample } from "@/lib/audio/process-recording";
 import {
   addFaceSamples,
+  addVoiceSamples,
   createPerson,
   getPerson,
   logAudit,
@@ -22,14 +24,22 @@ import { DetailsStep } from "./details-step";
 import { DoneStep } from "./done-step";
 import { type CapturedSample, FaceCaptureStep } from "./face-capture-step";
 import { ReviewStep } from "./review-step";
+import { VoiceCaptureStep } from "./voice-capture-step";
 
 type StepId = "details" | "face" | "voice" | "review" | "done";
+export type EnrollMode = "face" | "voice";
 
 /**
- * Enrollment wizard (PROJECT_SPEC §8 screen 4). With `personId` it adds samples to
- * an existing person ("re-enroll") and skips the details step.
+ * Enrollment wizard (PROJECT_SPEC §8 screen 4). With `personId` it adds face or voice
+ * samples to an existing person ("re-enroll") and skips the details step.
  */
-export function EnrollWizard({ personId }: { personId?: string }) {
+export function EnrollWizard({
+  personId,
+  mode = "face",
+}: {
+  personId?: string;
+  mode?: EnrollMode;
+}) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const existing = useQuery({
@@ -38,16 +48,19 @@ export function EnrollWizard({ personId }: { personId?: string }) {
     enabled: Boolean(personId),
   });
 
-  const [step, setStep] = useState<StepId>(personId ? "face" : "details");
+  const [step, setStep] = useState<StepId>(personId ? mode : "details");
   const [details, setDetails] = useState<PersonInput | null>(null);
   const [samples, setSamples] = useState<CapturedSample[]>([]);
+  const [voiceSamples, setVoiceSamples] = useState<VoiceSample[]>([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<{ id: string; name: string } | null>(null);
 
   const steps = [
     ...(personId ? [] : [{ id: "details", label: "Details" }]),
-    { id: "face", label: "Face" },
-    { id: "voice", label: "Voice", note: "Phase 3", disabled: true },
+    ...(!personId || mode === "face" ? [{ id: "face", label: "Face" }] : []),
+    ...(!personId || mode === "voice"
+      ? [{ id: "voice", label: "Voice", note: personId ? undefined : "optional" }]
+      : []),
     { id: "review", label: "Review" },
     { id: "done", label: "Done" },
   ];
@@ -55,6 +68,7 @@ export function EnrollWizard({ personId }: { personId?: string }) {
   function reset() {
     samples.forEach((s) => URL.revokeObjectURL(s.previewUrl));
     setSamples([]);
+    setVoiceSamples([]);
     setDetails(null);
     setSaved(null);
     if (personId) router.replace("/enroll");
@@ -72,10 +86,18 @@ export function EnrollWizard({ personId }: { personId?: string }) {
         id = person.id;
         name = person.name;
       }
-      await addFaceSamples(
-        id,
-        samples.map((s) => ({ embedding: s.embedding, quality: s.quality })),
-      );
+      if (samples.length > 0) {
+        await addFaceSamples(
+          id,
+          samples.map((s) => ({ embedding: s.embedding, quality: s.quality })),
+        );
+      }
+      if (voiceSamples.length > 0) {
+        await addVoiceSamples(
+          id,
+          voiceSamples.map((s) => s.embedding),
+        );
+      }
       if (saveAvatar && samples[0]) {
         // A failed thumbnail upload shouldn't lose the enrollment itself.
         await uploadAvatar(id, samples[0].thumbnail).catch(() =>
@@ -84,6 +106,7 @@ export function EnrollWizard({ personId }: { personId?: string }) {
       }
       await logAudit(personId ? "person.add_samples" : "person.enroll", id, {
         samples: samples.length,
+        voice_samples: voiceSamples.length,
       });
       await queryClient.invalidateQueries({ queryKey: peopleKeys.all });
       setSaved({ id, name });
@@ -128,6 +151,24 @@ export function EnrollWizard({ personId }: { personId?: string }) {
           onBack={() => (personId ? router.push(`/people/${personId}`) : setStep("details"))}
           onComplete={(captured) => {
             setSamples(captured);
+            setStep(personId ? "review" : "voice");
+          }}
+        />
+      ) : null}
+
+      {step === "voice" ? (
+        <VoiceCaptureStep
+          onBack={() => (personId ? router.push(`/people/${personId}`) : setStep("face"))}
+          onSkip={
+            personId
+              ? undefined
+              : () => {
+                  setVoiceSamples([]);
+                  setStep("review");
+                }
+          }
+          onComplete={(captured) => {
+            setVoiceSamples(captured);
             setStep("review");
           }}
         />
@@ -138,9 +179,10 @@ export function EnrollWizard({ personId }: { personId?: string }) {
           details={details}
           existingName={existing.data?.person.name}
           samples={samples}
+          voiceSamples={voiceSamples}
           defaultSaveAvatar={!existing.data?.person.avatar_path}
           saving={saving}
-          onBack={() => setStep("face")}
+          onBack={() => setStep(personId ? mode : "voice")}
           onSave={save}
         />
       ) : null}
