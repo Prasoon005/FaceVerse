@@ -1,0 +1,46 @@
+import type { EmailOtpType } from "@supabase/supabase-js";
+import { type NextRequest, NextResponse } from "next/server";
+
+import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/validations/auth";
+
+/**
+ * Landing point for Google OAuth (PKCE `code`) and email links (`token_hash` + `type`).
+ * Exchanges the token for a session cookie, then redirects.
+ *
+ * Email links should use the token_hash template (see README → Configure authentication):
+ * it is verified server-side, so it works even when the link is opened in another
+ * browser or the Gmail app, unlike the default PKCE link.
+ */
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = request.nextUrl;
+  const next = safeNextPath(searchParams.get("next"));
+  const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type") as EmailOtpType | null;
+  // Supabase reports failures (e.g. an expired or already-used link) via these params.
+  const providerError = searchParams.get("error_description") ?? searchParams.get("error");
+
+  const supabase = await createClient();
+
+  let error: { message: string } | null = providerError ? { message: providerError } : null;
+  if (!error && code) {
+    ({ error } = await supabase.auth.exchangeCodeForSession(code));
+  } else if (!error && tokenHash && type) {
+    ({ error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash }));
+  } else if (!error) {
+    // Usually an email link that was already used (e.g. pre-opened by a mail scanner).
+    // The address is most likely confirmed, so send the user to sign in with a friendly note.
+    const url = new URL("/login", origin);
+    url.searchParams.set("notice", "link_used");
+    return NextResponse.redirect(url);
+  }
+
+  if (error) {
+    const url = new URL("/login", origin);
+    url.searchParams.set("error", error.message);
+    return NextResponse.redirect(url);
+  }
+
+  return NextResponse.redirect(new URL(next, origin));
+}
