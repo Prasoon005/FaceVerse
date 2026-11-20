@@ -4,15 +4,16 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Content Security Policy (PROJECT_SPEC §10). 'wasm-unsafe-eval' lets the on-device
 // AI models (WASM backend) run; 'unsafe-eval' is only needed by the dev server.
-// cdn.jsdelivr.net is only used by the WASM fallback when WebGL is unavailable (Phase 2).
-// Phase 3 will add the Hugging Face model CDN to connect-src.
+// cdn.jsdelivr.net is only used by the face engine's WASM fallback when WebGL is unavailable.
+// huggingface.co / *.hf.co serve the voice model (Transformers.js); its ONNX Runtime WASM
+// files are self-hosted under /ort.
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net https://huggingface.co https://*.huggingface.co https://*.hf.co",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
