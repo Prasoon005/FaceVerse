@@ -18,8 +18,32 @@ export const recognitionConfig = {
     embeddingSize: 1024,
   },
   voice: {
-    match: 0.7,
+    /**
+     * Cosine similarity at or above this is the same speaker. The spec's starting point
+     * was 0.70; the model card for wavlm-base-plus-sv recommends 0.86. Calibrate with the
+     * scores shown on Settings → Security.
+     */
+    match: 0.86,
     embeddingSize: 512,
+    model: "Xenova/wavlm-base-plus-sv",
+    sampleRate: 16_000,
+    /** Minimum speech after silence trimming (PROJECT_SPEC §7.3). */
+    minSpeechSeconds: 2,
+    /** Recording stops automatically after this long. */
+    maxRecordSeconds: 8,
+    /** Share of the challenge phrase's tokens the transcript must contain. */
+    phraseMatchRatio: 0.7,
+  },
+  biometricLogin: {
+    /** Lockout after this many failed attempts within the window (PROJECT_SPEC §9). */
+    maxFailures: 5,
+    windowMinutes: 15,
+    /** Looser per-IP limit, so one device can't try many accounts. */
+    ipMaxFailures: 10,
+    /** Voice-only retries after a passed liveness + face check, before starting over. */
+    voiceAttempts: 3,
+    /** A captured face is reused for voice retries only this long. */
+    faceReuseSeconds: 180,
   },
   samples: {
     faceMin: 3,
