@@ -69,6 +69,11 @@ export function UserMenu({ user }: { user: ShellUser }) {
             <Settings aria-hidden /> Settings
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings/security">
+            <ShieldCheck aria-hidden /> Security
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={signOut}>
           <LogOut aria-hidden /> Sign out
         </DropdownMenuItem>
