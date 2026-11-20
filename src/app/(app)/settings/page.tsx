@@ -1,0 +1,15 @@
+import type { Metadata } from "next";
+
+import { ComingSoon } from "@/components/shared/coming-soon";
+
+export const metadata: Metadata = { title: "Settings" };
+
+export default function SettingsPage() {
+  return (
+    <ComingSoon
+      title="Settings"
+      description="Profile, appearance, security and privacy."
+      phase={6}
+    />
+  );
+}
