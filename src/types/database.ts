@@ -235,6 +235,10 @@ export type Database = {
         Args: { query: string; match_threshold: number; match_count: number };
         Returns: { person_id: string; name: string; similarity: number }[];
       };
+      // Service role only (biometric login route).
+      verify_face: { Args: { target_user: string; query: string }; Returns: number };
+      verify_voice: { Args: { target_user: string; query: string }; Returns: number };
+      user_id_by_email: { Args: { target_email: string }; Returns: string | null };
     };
     Enums: {
       user_role: "admin" | "member";
@@ -256,3 +260,4 @@ export type Profile = Tables<"profiles">;
 export type Person = Tables<"people">;
 export type PersonOverview = PublicSchema["Views"]["people_overview"]["Row"];
 export type RecognitionEvent = Tables<"recognition_events">;
+export type AuthAttempt = Tables<"auth_attempts">;

@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, ScanFace } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -62,6 +62,17 @@ export function LoginForm({ next }: { next: string }) {
           Sign in
         </Button>
       </form>
+      <Button variant="outline" size="lg" className="w-full" asChild>
+        <Link
+          href={
+            next === "/dashboard"
+              ? "/biometric-login"
+              : `/biometric-login?next=${encodeURIComponent(next)}`
+          }
+        >
+          <ScanFace aria-hidden /> Sign in with face + voice
+        </Link>
+      </Button>
       <p className="text-center text-sm text-muted-foreground">
         New here?{" "}
         <Link

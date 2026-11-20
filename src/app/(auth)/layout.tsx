@@ -13,7 +13,8 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
         <ThemeToggle />
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-16">
-        <div className="w-full max-w-sm">{children}</div>
+        {/* Pages marked data-wide (biometric login has a camera view) get more room. */}
+        <div className="w-full max-w-sm has-[[data-wide]]:max-w-xl">{children}</div>
       </main>
     </div>
   );

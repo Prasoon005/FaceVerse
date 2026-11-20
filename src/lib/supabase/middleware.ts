@@ -18,7 +18,7 @@ const PROTECTED_PREFIXES = [
   "/focus",
   "/settings",
 ];
-const AUTH_PAGES = ["/login", "/signup"];
+const AUTH_PAGES = ["/login", "/signup", "/biometric-login"];
 
 function matches(pathname: string, prefixes: string[]) {
   return prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));

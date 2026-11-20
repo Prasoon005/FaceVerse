@@ -4,6 +4,8 @@ import {
   CircleCheck,
   CircleX,
   Eye,
+  LoaderCircle,
+  ScanFace,
   MoveLeft,
   MoveRight,
   Play,
@@ -18,6 +20,7 @@ import { recognitionConfig } from "@/config/recognition";
 import { useCamera } from "@/hooks/use-camera";
 import { useDetectionLoop } from "@/hooks/use-detection-loop";
 import { useFaceEngine } from "@/hooks/use-face-engine";
+import { useSoundFeedback } from "@/hooks/use-sound-feedback";
 import {
   type ChallengeType,
   challengeLabels,
@@ -31,12 +34,14 @@ import {
 } from "@/lib/ai/liveness";
 import { FaceTracker } from "@/lib/ai/tracker";
 import type { DetectResult } from "@/lib/ai/types";
+import { normalize } from "@/lib/ai/vector";
 import { cn } from "@/lib/utils";
 
 import { CameraView } from "./camera-view";
 import { FaceOverlay } from "./face-overlay";
 import { ModelLoader } from "./model-loader";
 import { PermissionGate } from "./permission-gate";
+import { ScanOverlay } from "./scan-overlay";
 
 const challengeIcons: Record<ChallengeType, typeof Eye> = {
   blink: Eye,
@@ -45,28 +50,52 @@ const challengeIcons: Record<ChallengeType, typeof Eye> = {
   smile: Smile,
 };
 
+/** Frontal frames averaged into the login face embedding. */
+const FACE_FRAMES = 3;
+const FACE_MAX_YAW_DEG = 12;
+
+type FacePhase = "off" | "capturing" | "done" | "failed";
+
 /**
  * Reusable liveness check (PROJECT_SPEC §7.2): a random sequence of 2 challenges,
- * 8 s each, with a continuous face track required throughout.
+ * 8 s each, with a continuous face track required throughout. With `captureFace`,
+ * a passed check continues straight into a face capture on the same track, so the
+ * face that's verified is the one that did the challenges.
  */
 export function LivenessChallenge({
   onComplete,
+  onFaceCaptured,
+  captureFace = false,
   autoStart = false,
 }: {
   onComplete?: (result: LivenessResult) => void;
+  onFaceCaptured?: (embedding: Float32Array) => void;
+  captureFace?: boolean;
   autoStart?: boolean;
 }) {
   const camera = useCamera();
   const engine = useFaceEngine();
+  const sound = useSoundFeedback();
   const [state, setState] = useState<LivenessState | null>(null);
   const [lastFrame, setLastFrame] = useState<DetectResult | null>(null);
   const [now, setNow] = useState(0);
   const trackerRef = useRef(new FaceTracker());
   const reportedRef = useRef(false);
+  const [facePhase, setFacePhase] = useState<FacePhase>("off");
+  const [facesCaptured, setFacesCaptured] = useState(0);
+  const passedCountRef = useRef(0);
+  const faceRef = useRef<{ trackId: number | null; startedAt: number; frames: Float32Array[] }>({
+    trackId: null,
+    startedAt: 0,
+    frames: [],
+  });
 
   const start = useCallback(() => {
     trackerRef.current.reset();
     reportedRef.current = false;
+    passedCountRef.current = 0;
+    setFacePhase("off");
+    setFacesCaptured(0);
     const t = performance.now();
     setNow(t);
     setState(createLivenessState(pickChallenges(), t));
@@ -84,6 +113,38 @@ export function LivenessChallenge({
       const t = performance.now();
       setNow(t);
       const ids = trackerRef.current.update(result.faces.map((f) => f.box));
+
+      if (facePhase === "capturing") {
+        const capture = faceRef.current;
+        // Already complete; the phase change just hasn't re-rendered yet.
+        if (capture.frames.length >= FACE_FRAMES) return;
+        const face = result.faces[0];
+        if (
+          result.faces.length > 1 ||
+          (face && ids[0] !== capture.trackId) ||
+          t - capture.startedAt > recognitionConfig.liveness.challengeTimeoutMs
+        ) {
+          sound.play("error");
+          setFacePhase("failed");
+        } else if (
+          face?.embedding &&
+          Math.abs(face.yaw) <= FACE_MAX_YAW_DEG &&
+          face.box.width >= recognitionConfig.live.minMatchFaceSize
+        ) {
+          capture.frames.push(face.embedding);
+          setFacesCaptured(capture.frames.length);
+          if (capture.frames.length >= FACE_FRAMES) {
+            const sum = new Float32Array(face.embedding.length);
+            for (const e of capture.frames) for (let i = 0; i < e.length; i++) sum[i]! += e[i]!;
+            sound.play("success");
+            setFacePhase("done");
+            onFaceCaptured?.(normalize(sum));
+          }
+        }
+        return;
+      }
+      if (facePhase !== "off") return;
+
       setState((current) => {
         // autoStart: begin the sequence on the first frame once camera + engine are ready.
         const prev = current ?? (autoStart ? createLivenessState(pickChallenges(), t) : null);
@@ -102,9 +163,25 @@ export function LivenessChallenge({
             : null,
           t,
         );
+        // Ref guard: updaters can run twice in development, but the cue should fire once.
+        const passedCount = next.steps.filter((s) => s.status === "passed").length;
+        if (passedCount > passedCountRef.current) {
+          passedCountRef.current = passedCount;
+          // The final step gets the completion sound instead.
+          if (next.finishedAt === null) queueMicrotask(() => sound.play("step"));
+        }
         if (next.finishedAt !== null && !reportedRef.current) {
           reportedRef.current = true;
-          queueMicrotask(() => onComplete?.(toLivenessResult(next)));
+          queueMicrotask(() => {
+            if (!next.passed) sound.play("error");
+            else sound.play(captureFace ? "scan" : "success");
+            onComplete?.(toLivenessResult(next));
+            if (captureFace && next.passed) {
+              faceRef.current = { trackId: next.trackId, startedAt: performance.now(), frames: [] };
+              setFacesCaptured(0);
+              setFacePhase("capturing");
+            }
+          });
         }
         return next;
       });
@@ -126,13 +203,14 @@ export function LivenessChallenge({
         mirrored={camera.mirrored}
         maxHeight="50vh"
       >
-        {lastFrame && running ? (
+        {lastFrame && (running || facePhase === "capturing") ? (
           <FaceOverlay
             frame={lastFrame}
             mirrored={camera.mirrored}
             faces={lastFrame.faces.map((f, i) => ({ id: i, box: f.box, status: "neutral" }))}
           />
         ) : null}
+        {facePhase === "capturing" ? <ScanOverlay /> : null}
         <PermissionGate
           status={camera.status}
           error={camera.error}
@@ -177,6 +255,37 @@ export function LivenessChallenge({
               aria-label="Time left"
             />
           </>
+        ) : facePhase === "capturing" ? (
+          <>
+            <div className="flex items-center gap-3">
+              <ScanFace className="size-5 text-brand" aria-hidden />
+              <p className="text-base font-medium">Look straight at the camera and hold still</p>
+              <LoaderCircle
+                className="ml-auto size-4 animate-spin text-muted-foreground"
+                aria-hidden
+              />
+            </div>
+            <Progress
+              value={(facesCaptured / FACE_FRAMES) * 100}
+              className="h-1"
+              aria-label="Face scan progress"
+            />
+          </>
+        ) : facePhase === "done" ? (
+          <div className="flex items-center gap-3">
+            <CircleCheck className="size-5 text-success-foreground" aria-hidden />
+            <p className="text-sm font-medium">Liveness passed and face captured</p>
+          </div>
+        ) : facePhase === "failed" ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <CircleX className="size-5 text-danger-foreground" aria-hidden />
+            <p className="text-sm font-medium">
+              Couldn&apos;t capture your face. Keep only your face in view, looking at the camera.
+            </p>
+            <Button variant="outline" size="sm" className="ml-auto" onClick={start}>
+              <RotateCw aria-hidden /> Try again
+            </Button>
+          </div>
         ) : state.passed ? (
           <div className="flex flex-wrap items-center gap-3">
             <CircleCheck className="size-5 text-success-foreground" aria-hidden />
