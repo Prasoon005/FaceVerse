@@ -23,9 +23,9 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 
 | Phase | Scope                                                      | Status   |
 | ----- | ---------------------------------------------------------- | -------- |
-| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Built |
-| 2     | Face engine, enrollment, live multi-face recognition       | ⏳ Next  |
-| 3     | Voice engine + multi-factor biometric login                | Planned  |
+| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done  |
+| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Built |
+| 3     | Voice engine + multi-factor biometric login                | ⏳ Next  |
 | 4     | Smart visitor log                                          | Planned  |
 | 5     | Event photo finder                                         | Planned  |
 | 6     | Privacy, polish & v1 release                               | Planned  |
@@ -36,7 +36,21 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 
 ## Features
 
-**Available now (Phase 1)**
+**Phase 2: face recognition**
+
+- On-device face engine ([Human](https://github.com/vladmandic/human)) in a Web Worker: detection,
+  1024-d face descriptor, mesh, iris, emotion. WebGL with a WASM fallback
+- Model loading progress, device camera permission handling and graceful error states
+- **Enrollment wizard:** details, then guided face capture (straight, one side, other side) with
+  live quality chips (size, sharpness, pose, confidence, single face) and auto-capture, then review
+- **People:** searchable, sortable table with avatar, samples and last seen; detail page with
+  samples, recognition history, add samples and delete
+- **Live recognition:** every face in frame tracked and matched via pgvector, with name tags, a
+  green/amber/red confidence ring, an "in frame" panel, pause, snapshot, camera switch and FPS
+- **Liveness check** (random blink / turn / smile challenges), reusable for biometric login
+- Dashboard stats, a 14-day recognitions chart and activity feed now use real data
+
+**Phase 1: foundation**
 
 - Landing page with an animated, original face-mesh visual
 - Email/password sign-up and login, Google OAuth
@@ -48,8 +62,8 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 - `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
 - CI: lint, format check, typecheck and unit tests on every push/PR
 
-**Coming next:** face enrollment & live recognition (Phase 2), voice + biometric login (Phase 3),
-visitor log (Phase 4), event photo finder (Phase 5).
+**Coming next:** voice + biometric login (Phase 3), visitor log (Phase 4), event photo finder
+(Phase 5).
 
 ## Tech stack
 
@@ -58,6 +72,9 @@ visitor log (Phase 4), event photo finder (Phase 5).
 | Framework      | Next.js 16 (App Router) + TypeScript (strict)                   |
 | Styling        | Tailwind CSS v4 + shadcn/ui (Radix), CSS-variable design tokens |
 | Icons / Motion | lucide-react, Framer Motion                                     |
+| Face AI        | @vladmandic/human in a Web Worker (Comlink)                     |
+| Tables         | TanStack Table v9                                               |
+| Charts         | Recharts                                                        |
 | Forms          | react-hook-form + zod                                           |
 | State          | Zustand (client), TanStack Query (server)                       |
 | Theme          | next-themes                                                     |
@@ -65,7 +82,7 @@ visitor log (Phase 4), event photo finder (Phase 5).
 | Testing        | Vitest + React Testing Library (Playwright in Phase 6)          |
 | CI / Hosting   | GitHub Actions, Vercel Hobby, Supabase Free                     |
 
-Face AI (`@vladmandic/human`) and voice AI (Transformers.js) are added in Phases 2 and 3.
+Voice AI (Transformers.js) is added in Phase 3.
 
 ## Getting started
 
@@ -78,7 +95,7 @@ Face AI (`@vladmandic/human`) and voice AI (Transformers.js) are added in Phases
 ### 1. Install
 
 ```bash
-npm install
+npm install          # also copies the face models into public/models (postinstall)
 cp .env.example .env.local
 ```
 
@@ -101,6 +118,7 @@ Either paste each file into the Supabase **SQL Editor** in order:
 
 1. `supabase/migrations/0001_extensions.sql`
 2. `supabase/migrations/0002_core.sql`
+3. `supabase/migrations/0003_face_matching.sql` (match_faces RPC, people overview, avatars bucket)
 
 …or use the Supabase CLI:
 
@@ -168,6 +186,7 @@ update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
 | `npm test`             | Vitest unit tests                     |
 | `npm run format`       | Prettier write                        |
 | `npm run format:check` | Prettier check (used in CI)           |
+| `npm run models:copy`  | Re-copy face models to public/models  |
 
 ## Deploying (free)
 
@@ -188,9 +207,12 @@ update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
 docs/                Architecture, changelog, privacy, per-phase checklists
 supabase/            SQL migrations + seed
 src/app/             Routes: (marketing), (auth), (app), api, auth callback
-src/components/      ui (shadcn), layout, shared, auth, marketing
+src/components/      ui (shadcn), layout, shared, auth, marketing, camera, enroll, people, live, charts
 src/config/          site + navigation config
-src/lib/             supabase clients, validations, utils
+src/lib/             ai (vector, liveness, quality, tracker, face client), data, supabase, validations
+src/workers/         face.worker.ts (Human, off the main thread)
+src/hooks/           useCamera, useFaceEngine, useDetectionLoop
+scripts/             copy-models.mjs
 src/stores/          Zustand stores
 src/types/           Database types
 src/proxy.ts         Session refresh + auth redirects (Next 16 "proxy", formerly middleware)
@@ -209,3 +231,6 @@ stored, every table has Row Level Security, and you can export or delete your bi
 - Biometric checks run in the browser and are a convenience factor, not production-grade
   biometric security.
 - Free Supabase limits apply (~500 MB database, 1 GB storage, 5 GB egress/month).
+- Face matching thresholds (`src/config/recognition.ts`) are starting values; tune them with
+  your own data. If the liveness "turn left/right" prompts feel swapped, flip `yawLeftSign`.
+- First visit to a camera page downloads ~12 MB of models (cached afterwards).

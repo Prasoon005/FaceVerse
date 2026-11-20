@@ -1,7 +1,7 @@
 # Privacy at FaceVerse
 
-_Plain-language summary. Updated as features ship; the full consent and data-control screens land
-in Phase 6._
+_Plain-language summary. Updated as features ship (last: Phase 2); the full consent and
+data-control screens land in Phase 6._
 
 ## What runs where
 
@@ -22,6 +22,15 @@ in Phase 6._
 | Photos                        | Only where a feature needs them (albums, optional visitor snapshot, avatar) | When you upload         |
 
 Photos are compressed in your browser before upload and stored in private buckets.
+
+**Enrollment (Phase 2):** for each person we store 3–5 face embeddings with a quality score. A
+small face thumbnail (about 256 px JPEG) is saved as their profile photo **only if you leave that
+option ticked** on the review step. Deleting a person removes their embeddings, thumbnail and
+recognition history.
+
+**Live recognition:** the video never leaves your device. We log one recognition event per person
+at most every 30 seconds (who, similarity, time). Unknown faces are logged without any identity
+or image.
 
 ## Who can see it
 

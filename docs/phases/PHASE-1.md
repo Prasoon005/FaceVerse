@@ -1,6 +1,6 @@
 # Phase 1 — Foundation & UI shell
 
-**Status:** built, awaiting phase check · **Date:** 2026-11-20
+**Status:** ✅ done (deployed to https://face-verse-two.vercel.app) · **Date:** 2026-11-20
 
 ## What was built
 

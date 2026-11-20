@@ -1,6 +1,6 @@
 # Architecture
 
-_Last updated: Phase 1 (2026-11-20)._
+_Last updated: Phase 2 (2026-11-20)._
 
 ## Overview
 
@@ -52,7 +52,7 @@ does similarity search with pgvector.
 
 `?next=` values are validated by `safeNextPath()` to prevent open redirects.
 
-## Data model (Phase 1)
+## Data model
 
 Defined in `supabase/migrations/0002_core.sql`:
 
@@ -61,8 +61,17 @@ Defined in `supabase/migrations/0002_core.sql`:
 - `face_embeddings` (`vector(1024)`) and `voice_embeddings` (`vector(512)`), HNSW cosine indexes.
 - `recognition_events`, `auth_attempts`, `audit_logs`.
 
-Later phases add `visitor_logs` (0003), `albums` / `album_photos` / `photo_faces` (0004) and RPC
-functions (`match_faces`, `verify_face`, `verify_voice`, `find_in_album`).
+`0003_face_matching.sql` (Phase 2) adds:
+
+- `match_faces(query, match_threshold, match_count)`: `SECURITY INVOKER`, owner-filtered top-k
+  cosine matches, returning the best sample per person.
+- `people_overview` view (`security_invoker = true`): people + face/voice sample counts +
+  `last_seen_at`.
+- Private `avatars` storage bucket; objects live at `<owner uid>/<person id>.jpg` and only their
+  owner can read or write them (signed URLs for display).
+
+Later phases add `visitor_logs` (0004), `albums` / `album_photos` / `photo_faces` (0005) and the
+`verify_face`, `verify_voice` and `find_in_album` functions.
 
 ### Row Level Security
 
@@ -73,6 +82,32 @@ functions (`match_faces`, `verify_face`, `verify_voice`, `find_in_album`).
   change their own `role`.
 - `auth_attempts`: no insert policy; only the service role (server route, Phase 3) writes.
 
+## Face recognition pipeline (Phase 2)
+
+```text
+useCamera ─▶ <video> ─▶ useDetectionLoop (≈7 FPS, one frame in flight, pauses when tab hidden)
+                          │ createImageBitmap + Comlink.transfer (no pixel copies)
+                          ▼
+               face.worker.ts ── Human (WebGL → WASM fallback)
+                 detect → box, score, 1024-d embedding (L2-normalised), yaw/pitch/roll,
+                          eye aspect ratio, emotion, [sharpness], [landmarks]
+                          ▼
+   Enroll: qualityCheck + pose check → auto-capture 3–5 samples → face_embeddings
+   Live:   FaceTracker (IoU) → per-track matchFace() on the mean of 5 embeddings, after 500 ms, re-checked every 2 s
+           → match_faces RPC (top 2) → classify (≥0.65 match with 0.10 margin, 0.55–0.65 uncertain)
+           → FaceOverlay + InFramePanel → recognition_events (≤1 per person / 30 s)
+   Liveness: random 2 of blink / turn left / turn right / smile, 8 s each,
+             same track id throughout (lib/ai/liveness.ts)
+```
+
+- Models (`blazeface`, `facemesh`, `iris`, `faceres`, `emotion`) are copied to `public/models` by
+  `scripts/copy-models.mjs` on install. The worker downloads them with progress the first time,
+  then Human caches them in IndexedDB.
+- The main thread only draws. Overlays are positioned in percentages of the frame, and the video
+  container uses the stream aspect ratio, so boxes never drift. CSS transitions smooth the motion
+  between detections.
+- Tunable values live in `src/config/recognition.ts`.
+
 ## Front-end structure
 
 ```text
@@ -82,20 +117,33 @@ src/
     ui/                   shadcn/ui primitives (generated, not hand-edited)
     layout/               AppShell, Sidebar, MobileSidebar, Topbar, Breadcrumbs,
                           CommandMenu, ThemeToggle, UserMenu, NotificationsBell, NavLinks
-    shared/               Logo, PageHeader, StatCard, EmptyState, ComingSoon
+    shared/               Logo, PageHeader, StatCard, EmptyState, ComingSoon, ConfidenceRing,
+                          StepperRail, ConfirmDialog, DataTable
+    camera/               CameraView, FaceOverlay, PermissionGate, ModelLoader, LivenessChallenge
+    enroll/               EnrollWizard + Details / FaceCapture / Review / Done steps
+    people/               PeopleTable, PersonDetail, PersonAvatar, ListTypeBadge
+    live/                 LiveRecognition, InFramePanel
+    charts/               RecognitionsChart
     auth/                 LoginForm, SignupForm, GoogleButton, FormField
     marketing/            SiteHeader, HeroMesh (canvas animation)
     providers.tsx         ThemeProvider, QueryClientProvider, TooltipProvider, Toaster
   config/site.ts          site metadata + sidebar navigation (single source of truth)
+  config/recognition.ts   thresholds, quality, liveness and live-mode tuning
+  workers/face.worker.ts  Human face engine (Comlink)
+  hooks/                  useCamera, useFaceEngine, useDetectionLoop, usePageVisible
+  lib/ai/                 vector, quality, liveness, tracker, capture, face (worker client), types
+  lib/data/               people, recognition (match + throttled logging), dashboard (server)
   lib/supabase/           client.ts, server.ts, middleware.ts (updateSession), env.ts
-  lib/validations/        zod schemas (auth)
+  lib/validations/        zod schemas (auth, person)
   stores/ui-store.ts      Zustand: sidebar collapsed (persisted), mobile nav, command palette
+  stores/face-engine-store.ts  Zustand: model loading status / progress / backend
   types/database.ts       Supabase types
   proxy.ts                session refresh + redirects
 ```
 
 Server/client boundary: pages and layouts are Server Components; `"use client"` is used only for
-interactive pieces (forms, sidebar, topbar, command palette, theme toggle, hero animation).
+interactive pieces (forms, sidebar, topbar, command palette, theme toggle, hero animation, camera
+pages). Client data access uses TanStack Query (`peopleKeys`); the dashboard queries on the server.
 
 ## Design tokens
 
@@ -108,7 +156,8 @@ text variants that meet WCAG AA). Dark theme is the default (`next-themes`, clas
 Set in `next.config.ts` for all routes:
 
 - `Content-Security-Policy`: self-only scripts plus `'wasm-unsafe-eval'` (for WASM AI backends),
-  Supabase for `connect-src`/`img-src`, `worker-src 'self' blob:`, `frame-ancestors 'none'`.
+  Supabase for `connect-src`/`img-src`, `cdn.jsdelivr.net` in `connect-src` (WASM fallback only),
+  `worker-src 'self' blob:`, `frame-ancestors 'none'`.
 - `Permissions-Policy: camera=(self), microphone=(self)`.
 - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`.
 
