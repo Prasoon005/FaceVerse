@@ -1,0 +1,6 @@
+-- seed.sql
+-- Optional local seed data. Intentionally empty: profiles are created by the
+-- on_auth_user_created trigger when you sign up through the app.
+--
+-- To make yourself an admin after signing up, run in the SQL editor:
+--   update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
