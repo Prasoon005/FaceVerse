@@ -4,6 +4,7 @@ const isDev = process.env.NODE_ENV !== "production";
 
 // Content Security Policy (PROJECT_SPEC §10). 'wasm-unsafe-eval' lets the on-device
 // AI models (WASM backend) run; 'unsafe-eval' is only needed by the dev server.
+// cdn.jsdelivr.net is only used by the WASM fallback when WebGL is unavailable (Phase 2).
 // Phase 3 will add the Hugging Face model CDN to connect-src.
 const csp = [
   "default-src 'self'",
@@ -11,7 +12,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdn.jsdelivr.net",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "frame-ancestors 'none'",
