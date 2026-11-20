@@ -1,6 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "framer-motion";
 import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 
@@ -21,10 +22,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
       disableTransitionOnChange
     >
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={300}>
-          {children}
-          <Toaster position="bottom-right" richColors closeButton />
-        </TooltipProvider>
+        {/* Every framer-motion animation follows the OS "reduce motion" setting. */}
+        <MotionConfig reducedMotion="user">
+          <TooltipProvider delayDuration={300}>
+            {children}
+            <Toaster position="bottom-right" richColors closeButton />
+          </TooltipProvider>
+        </MotionConfig>
       </QueryClientProvider>
     </ThemeProvider>
   );

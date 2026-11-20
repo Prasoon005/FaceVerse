@@ -3,6 +3,8 @@ import type { LucideIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
+import { AnimatedNumber } from "./motion";
+
 type Tone = "default" | "success" | "warning" | "danger";
 
 const toneClasses: Record<Tone, string> = {
@@ -26,14 +28,16 @@ export function StatCard({
   tone?: Tone;
 }) {
   return (
-    <Card className="gap-3 px-4 py-4">
+    <Card className="h-full gap-3 px-4 py-4 transition-shadow hover:shadow-md">
       <div className="flex items-center justify-between">
         <span className="text-sm text-muted-foreground">{label}</span>
         <span className={cn("grid size-8 place-items-center rounded-md", toneClasses[tone])}>
           <Icon className="size-4" aria-hidden />
         </span>
       </div>
-      <div className="font-mono text-2xl font-semibold tabular-nums">{value}</div>
+      <div className="font-mono text-2xl font-semibold tabular-nums">
+        {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
+      </div>
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </Card>
   );

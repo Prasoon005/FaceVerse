@@ -1,7 +1,9 @@
 "use client";
 
+import { LayoutGroup, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { appNav, type NavItem } from "@/config/site";
@@ -20,33 +22,37 @@ export function NavLinks({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  // Scopes the sliding highlight to this instance (sidebar and mobile drawer).
+  const groupId = useId();
 
   return (
-    <nav aria-label="Main" className="grid gap-5">
-      {appNav.map((section) => (
-        <div key={section.title} className="grid gap-1">
-          {collapsed ? (
-            <span className="sr-only">{section.title}</span>
-          ) : (
-            <span className="px-2.5 text-xs font-medium text-muted-foreground">
-              {section.title}
-            </span>
-          )}
-          <ul className="grid gap-0.5">
-            {section.items.map((item) => (
-              <li key={item.href}>
-                <NavLink
-                  item={item}
-                  active={isActive(pathname, item.href)}
-                  collapsed={collapsed}
-                  onNavigate={onNavigate}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
-    </nav>
+    <LayoutGroup id={groupId}>
+      <nav aria-label="Main" className="grid gap-5">
+        {appNav.map((section) => (
+          <div key={section.title} className="grid gap-1">
+            {collapsed ? (
+              <span className="sr-only">{section.title}</span>
+            ) : (
+              <span className="px-2.5 text-xs font-medium text-muted-foreground">
+                {section.title}
+              </span>
+            )}
+            <ul className="grid gap-0.5">
+              {section.items.map((item) => (
+                <li key={item.href}>
+                  <NavLink
+                    item={item}
+                    active={isActive(pathname, item.href)}
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+    </LayoutGroup>
   );
 }
 
@@ -69,11 +75,20 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.title : undefined}
       className={cn(
-        "flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
-        active && "bg-sidebar-accent font-medium text-foreground",
+        "relative isolate flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-sidebar-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        active && "font-medium text-foreground",
         collapsed && "justify-center px-0",
       )}
     >
+      {active ? (
+        // Slides between links when the page changes.
+        <motion.span
+          layoutId="nav-active"
+          aria-hidden
+          className="absolute inset-0 -z-10 rounded-md bg-sidebar-accent"
+          transition={{ type: "spring", stiffness: 500, damping: 38 }}
+        />
+      ) : null}
       <Icon className={cn("size-4 shrink-0", active && "text-brand")} aria-hidden />
       {collapsed ? null : (
         <>

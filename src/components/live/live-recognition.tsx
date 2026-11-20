@@ -23,6 +23,7 @@ import { recognitionConfig } from "@/config/recognition";
 import { useCamera } from "@/hooks/use-camera";
 import { useDetectionLoop } from "@/hooks/use-detection-loop";
 import { useFaceEngine } from "@/hooks/use-face-engine";
+import { useSoundFeedback } from "@/hooks/use-sound-feedback";
 import { canvasToBlob, downloadBlob } from "@/lib/ai/capture";
 import { FaceTracker } from "@/lib/ai/tracker";
 import type { DetectResult, FaceResult } from "@/lib/ai/types";
@@ -77,6 +78,9 @@ export function LiveRecognition() {
   const trackerRef = useRef(new FaceTracker());
   const tracksRef = useRef(new Map<number, TrackInfo>());
   const loggerRef = useRef<ReturnType<typeof createRecognitionLogger> | null>(null);
+  const sound = useSoundFeedback();
+  /** Last chime per person, so someone standing in view doesn't chime on every re-check. */
+  const chimedRef = useRef(new Map<string, number>());
 
   function scheduleMatches(now: number) {
     loggerRef.current ??= createRecognitionLogger("live");
@@ -94,7 +98,17 @@ export function LiveRecognition() {
         .then((match) => {
           const current = tracksRef.current.get(id);
           if (!current) return;
+          const wasMatch = current.match?.status === "match";
           current.match = match;
+          if (match.status === "match" && !wasMatch && match.personId) {
+            const last = chimedRef.current.get(match.personId) ?? -Infinity;
+            if (Date.now() - last > live.logThrottleMs) {
+              chimedRef.current.set(match.personId, Date.now());
+              sound.play("recognized");
+            }
+          } else if (match.status === "unknown" && current.attempts === 1) {
+            sound.play("unknown");
+          }
           if (match.status === "match") void log(match.personId, match.similarity);
           // Unknown faces are logged once per track (person_id = null).
           else if (match.status === "unknown" && current.attempts === 1) {

@@ -7,6 +7,7 @@ import { useUiStore } from "@/stores/ui-store";
 
 import { Breadcrumbs } from "./breadcrumbs";
 import { NotificationsBell } from "./notifications-bell";
+import { SoundToggle } from "./sound-toggle";
 import { ThemeToggle } from "./theme-toggle";
 import { type ShellUser, UserMenu } from "./user-menu";
 
@@ -49,6 +50,7 @@ export function Topbar({ user }: { user: ShellUser }) {
         >
           <Search aria-hidden />
         </Button>
+        <SoundToggle />
         <ThemeToggle />
         <NotificationsBell />
         <UserMenu user={user} />

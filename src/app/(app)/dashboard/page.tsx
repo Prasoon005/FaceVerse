@@ -5,6 +5,7 @@ import Link from "next/link";
 import { RecognitionsChart } from "@/components/charts/recognitions-chart";
 import { ConfidenceRing } from "@/components/shared/confidence-ring";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Stagger, StaggerItem, StaggerList, StaggerListItem } from "@/components/shared/motion";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
@@ -70,11 +71,13 @@ export default async function DashboardPage() {
         }
       />
 
-      <section aria-label="Key stats" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <Stagger aria-label="Key stats" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((s) => (
-          <StatCard key={s.label} {...s} />
+          <StaggerItem key={s.label}>
+            <StatCard {...s} />
+          </StaggerItem>
         ))}
-      </section>
+      </Stagger>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -107,9 +110,15 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-2">
             {quickActions.map((a) => (
-              <Button key={a.href} variant="outline" className="h-10 justify-start" asChild>
+              <Button
+                key={a.href}
+                variant="outline"
+                className="group h-10 justify-start transition-transform hover:translate-x-0.5"
+                asChild
+              >
                 <Link href={a.href}>
-                  <a.icon aria-hidden /> {a.label}
+                  <a.icon aria-hidden className="transition-colors group-hover:text-brand" />{" "}
+                  {a.label}
                 </Link>
               </Button>
             ))}
@@ -138,11 +147,11 @@ export default async function DashboardPage() {
               }
             />
           ) : (
-            <ul className="divide-y">
+            <StaggerList className="divide-y">
               {activity.map((e) => {
                 const status = e.personId ? classifyFaceSimilarity(e.similarity) : "unknown";
                 return (
-                  <li key={e.id} className="flex items-center gap-3 py-2.5 text-sm">
+                  <StaggerListItem key={e.id} className="flex items-center gap-3 py-2.5 text-sm">
                     <ConfidenceRing value={e.similarity} status={status} size={24} />
                     {e.personId ? (
                       <Link
@@ -167,10 +176,10 @@ export default async function DashboardPage() {
                     >
                       {formatRelative(e.createdAt)}
                     </time>
-                  </li>
+                  </StaggerListItem>
                 );
               })}
-            </ul>
+            </StaggerList>
           )}
         </CardContent>
       </Card>

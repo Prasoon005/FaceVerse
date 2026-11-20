@@ -1,3 +1,6 @@
+"use client";
+
+import { AnimatePresence, motion } from "framer-motion";
 import { CircleHelp, UserX, Users } from "lucide-react";
 import Link from "next/link";
 
@@ -46,24 +49,33 @@ export function InFramePanel({
           </p>
         ) : (
           <ul className="grid gap-1" aria-live="polite">
-            {[...recognised.values()].map((f) => {
-              const person = byName.get(f.label!);
-              return (
-                <li key={f.label}>
-                  <Link
-                    href={person ? `/people/${person.id}` : "/people"}
-                    className="flex items-center gap-3 rounded-lg p-2 text-sm hover:bg-muted"
+            <AnimatePresence initial={false}>
+              {[...recognised.values()].map((f) => {
+                const person = byName.get(f.label!);
+                return (
+                  <motion.li
+                    key={f.label}
+                    layout
+                    initial={{ opacity: 0, x: 16, scale: 0.96 }}
+                    animate={{ opacity: 1, x: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -16 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28 }}
                   >
-                    <PersonAvatar name={f.label!} url={person?.avatarUrl ?? null} />
-                    <span className="flex-1 truncate font-medium">{f.label}</span>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {Math.round((f.similarity ?? 0) * 100)}%
-                    </span>
-                    <ConfidenceRing value={f.similarity ?? null} status="match" size={22} />
-                  </Link>
-                </li>
-              );
-            })}
+                    <Link
+                      href={person ? `/people/${person.id}` : "/people"}
+                      className="flex items-center gap-3 rounded-lg p-2 text-sm hover:bg-muted"
+                    >
+                      <PersonAvatar name={f.label!} url={person?.avatarUrl ?? null} />
+                      <span className="flex-1 truncate font-medium">{f.label}</span>
+                      <span className="font-mono text-xs text-muted-foreground">
+                        {Math.round((f.similarity ?? 0) * 100)}%
+                      </span>
+                      <ConfidenceRing value={f.similarity ?? null} status="match" size={22} />
+                    </Link>
+                  </motion.li>
+                );
+              })}
+            </AnimatePresence>
           </ul>
         )}
       </div>
@@ -85,7 +97,14 @@ function Stat({
   return (
     <div className="grid gap-1 rounded-lg bg-muted/50 p-2">
       <Icon className={`mx-auto size-4 ${tone ?? "text-muted-foreground"}`} aria-hidden />
-      <span className="font-mono text-lg font-semibold tabular-nums">{value}</span>
+      <motion.span
+        key={value}
+        initial={{ y: -6, opacity: 0.4 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="font-mono text-lg font-semibold tabular-nums"
+      >
+        {value}
+      </motion.span>
       <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
