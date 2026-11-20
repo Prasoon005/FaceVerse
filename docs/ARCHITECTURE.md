@@ -1,6 +1,6 @@
 # Architecture
 
-_Last updated: Phase 2 (2026-11-20)._
+_Last updated: Phase 3 (2026-11-21)._
 
 ## Overview
 
@@ -15,6 +15,7 @@ does similarity search with pgvector.
 │   ├─ Camera / mic (getUserMedia)                       [Phase 2/3]  │
 │   ├─ face.worker.ts  → Human → 1024-d embedding        [Phase 2]    │
 │   └─ voice.worker.ts → Transformers.js → 512-d vector  [Phase 3]    │
+│  Biometric login: embeddings → /api/biometric-login (service role)  │
 │  Matching: embeddings → Supabase RPC (pgvector cosine)              │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ HTTPS (supabase-js, RLS-protected)
@@ -27,13 +28,13 @@ does similarity search with pgvector.
 
 ## Routing
 
-| Route group   | Paths                                                                                                             | Notes                                  |
-| ------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `(marketing)` | `/`                                                                                                               | Static landing page                    |
-| `(auth)`      | `/login`, `/signup`                                                                                               | Centered card layout                   |
-| `(app)`       | `/dashboard`, `/activity`, `/live`, `/people`, `/enroll`, `/visitors`, `/albums`, `/tools`, `/focus`, `/settings` | Sidebar + topbar shell, requires login |
-| `auth/*`      | `/auth/callback` (GET), `/auth/signout` (POST)                                                                    | Session exchange / sign-out            |
-| `api/*`       | `/api/health`                                                                                                     | Keep-alive probe                       |
+| Route group   | Paths                                                                                                                                   | Notes                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `(marketing)` | `/`                                                                                                                                     | Static landing page                    |
+| `(auth)`      | `/login`, `/signup`, `/biometric-login`                                                                                                 | Centered card layout                   |
+| `(app)`       | `/dashboard`, `/activity`, `/live`, `/people`, `/enroll`, `/visitors`, `/albums`, `/tools`, `/focus`, `/settings`, `/settings/security` | Sidebar + topbar shell, requires login |
+| `auth/*`      | `/auth/callback` (GET), `/auth/signout` (POST)                                                                                          | Session exchange / sign-out            |
+| `api/*`       | `/api/health`, `/api/biometric-login` (POST)                                                                                            | Keep-alive probe                       |
 
 ## Authentication flow
 
@@ -70,8 +71,17 @@ Defined in `supabase/migrations/0002_core.sql`:
 - Private `avatars` storage bucket; objects live at `<owner uid>/<person id>.jpg` and only their
   owner can read or write them (signed URLs for display).
 
-Later phases add `visitor_logs` (0004), `albums` / `album_photos` / `photo_faces` (0005) and the
-`verify_face`, `verify_voice` and `find_in_album` functions.
+`0004_biometric_login.sql` (Phase 3) adds, all `SECURITY DEFINER` and executable only by the
+service role (revoked from `PUBLIC`, `anon` and `authenticated`):
+
+- `verify_face(target_user, query)` / `verify_voice(target_user, query)`: best cosine similarity
+  against people that are both **owned by** and **linked to** the target user. The spec's version
+  only checked `linked_user_id`, which would let someone link their own face to another user.
+- `user_id_by_email(email)`: email → user id for the login route.
+- An `auth_attempts (ip_hash, created_at)` index for per-IP rate limiting.
+
+Later phases add `visitor_logs` (0005), `albums` / `album_photos` / `photo_faces` (0006) and
+`find_in_album`.
 
 ### Row Level Security
 
@@ -80,7 +90,8 @@ Later phases add `visitor_logs` (0004), `albums` / `album_photos` / `photo_faces
 - `is_admin()` is `SECURITY DEFINER` so policies can check the caller's role without recursion.
 - `profiles`: read/update own row only. `UPDATE` is granted only on safe columns, so users can't
   change their own `role`.
-- `auth_attempts`: no insert policy; only the service role (server route, Phase 3) writes.
+- `auth_attempts`: no insert policy; only the service role (`/api/biometric-login`) writes. Users
+  can read their own rows (Settings → Security).
 
 ## Face recognition pipeline (Phase 2)
 
@@ -108,6 +119,45 @@ useCamera ─▶ <video> ─▶ useDetectionLoop (≈7 FPS, one frame in flight,
   between detections.
 - Tunable values live in `src/config/recognition.ts`.
 
+## Voice pipeline and biometric login (Phase 3)
+
+```text
+MicRecorder (MediaRecorder + AnalyserNode waveform, auto-stop at 8 s)
+   │  optional: Web Speech API transcript of the challenge phrase
+   ▼
+decodeToMono16k (AudioContext decode → OfflineAudioContext resample) → trimSilence (energy VAD)
+   │  rejects < 2 s of speech
+   ▼
+voice.worker.ts ── Transformers.js: AutoProcessor + WavLM x-vector (q8, WASM)
+   → 512-d embedding (L2-normalised)
+   ▼
+Enroll: 3 phrases → voice_embeddings
+Login:  /biometric-login
+   Email → LivenessChallenge (2 random prompts) → face capture on the SAME track (3 frontal
+   frames averaged) → challenge phrase (voice embedding + phrase score)
+   → POST /api/biometric-login
+   Voice/phrase failure → up to 3 voice tries with the same face (≤ 3 min old)
+   Face/liveness failure or 3rd voice failure → start again from liveness
+```
+
+`/api/biometric-login` (Node runtime, service role):
+
+1. Validates the body with zod (embedding sizes, finite values) and re-normalises embeddings.
+2. Rate limits: 5 failures / 15 min per account, 10 per IP (HMAC-hashed IP in `auth_attempts`).
+3. Looks up the user and requires `profiles.biometric_login_enabled`. Unknown emails and disabled
+   accounts get the same "not set up" answer.
+4. Checks `verify_face` ≥ face match threshold, `verify_voice` ≥ 0.86, liveness passed, and phrase
+   score ≥ 70% when transcription ran. Failures return reasons, never scores.
+5. Logs the attempt. On success, `auth.admin.generateLink({ type: "magiclink" })` creates a
+   one-time token (no email is sent) that is immediately exchanged with `verifyOtp` on the
+   cookie-based server client, which sets the session cookies. An audit log entry is written.
+
+Liveness and the phrase check happen in the browser, so the server can't prove them. This is why
+biometric login is an opt-in, demo-grade factor.
+
+The voice model files come from the Hugging Face Hub (cached by the browser's Cache API). The ONNX
+Runtime WASM files are self-hosted under `/ort` (copied by `scripts/copy-models.mjs`).
+
 ## Front-end structure
 
 ```text
@@ -119,24 +169,37 @@ src/
                           CommandMenu, ThemeToggle, UserMenu, NotificationsBell, NavLinks
     shared/               Logo, PageHeader, StatCard, EmptyState, ComingSoon, ConfidenceRing,
                           StepperRail, ConfirmDialog, DataTable
-    camera/               CameraView, FaceOverlay, PermissionGate, ModelLoader, LivenessChallenge
-    enroll/               EnrollWizard + Details / FaceCapture / Review / Done steps
+    camera/               CameraView, FaceOverlay, PermissionGate, ModelLoader, LivenessChallenge,
+                          ScanOverlay
+    voice/                MicRecorder, Waveform, ChallengePhrase, VoiceCapture, VoiceModelStatus,
+                          VoiceScan
+    enroll/               EnrollWizard + Details / FaceCapture / VoiceCapture / Review / Done steps
+    settings/             SecuritySettings
     people/               PeopleTable, PersonDetail, PersonAvatar, ListTypeBadge
-    live/                 LiveRecognition, InFramePanel
+    live/                 LiveRecognition, InFramePanel, ScoresPanel
     charts/               RecognitionsChart
-    auth/                 LoginForm, SignupForm, GoogleButton, FormField
+    auth/                 LoginForm, SignupForm, GoogleButton, FormField, BiometricLogin,
+                          VerificationStatus, VerificationTips
     marketing/            SiteHeader, HeroMesh (canvas animation)
     providers.tsx         ThemeProvider, QueryClientProvider, TooltipProvider, Toaster
   config/site.ts          site metadata + sidebar navigation (single source of truth)
   config/recognition.ts   thresholds, quality, liveness and live-mode tuning
   workers/face.worker.ts  Human face engine (Comlink)
-  hooks/                  useCamera, useFaceEngine, useDetectionLoop, usePageVisible
-  lib/ai/                 vector, quality, liveness, tracker, capture, face (worker client), types
-  lib/data/               people, recognition (match + throttled logging), dashboard (server)
-  lib/supabase/           client.ts, server.ts, middleware.ts (updateSession), env.ts
+  workers/voice.worker.ts Transformers.js speaker embeddings (Comlink)
+  hooks/                  useCamera, useMicrophone, useFaceEngine, useVoiceEngine,
+                          useDetectionLoop, usePageVisible, useIsClient, useSoundFeedback
+  lib/ai/                 vector, quality, liveness, tracker, capture, face + voice clients, types
+  lib/audio/              resample, vad (silence trim), phrase, transcribe, process-recording,
+                          feedback (UI sounds)
+  lib/auth/biometric.ts   login request schema, decision rules, lockout window
+  lib/data/               people, recognition, dashboard (server), security
+  lib/supabase/           client.ts, server.ts, admin.ts (service role, server only),
+                          middleware.ts (updateSession), env.ts
   lib/validations/        zod schemas (auth, person)
   stores/ui-store.ts      Zustand: sidebar collapsed (persisted), mobile nav, command palette
-  stores/face-engine-store.ts  Zustand: model loading status / progress / backend
+  stores/face-engine-store.ts  Zustand: face model loading status / progress / backend
+  stores/voice-engine-store.ts Zustand: voice model loading status / progress
+  stores/sound-store.ts        Zustand: UI sounds on/off (persisted)
   types/database.ts       Supabase types
   proxy.ts                session refresh + redirects
 ```
@@ -144,6 +207,18 @@ src/
 Server/client boundary: pages and layouts are Server Components; `"use client"` is used only for
 interactive pieces (forms, sidebar, topbar, command palette, theme toggle, hero animation, camera
 pages). Client data access uses TanStack Query (`peopleKeys`); the dashboard queries on the server.
+
+## Motion and sound
+
+- `components/shared/motion.tsx`: `Stagger` / `StaggerItem` / `StaggerList` / `StaggerListItem`
+  and `AnimatedNumber` (Client Components that Server Components can render).
+- `(app)/template.tsx` re-mounts on navigation for a short page transition; the sidebar highlight
+  uses a shared `layoutId`.
+- `<MotionConfig reducedMotion="user">` in `providers.tsx` applies the OS reduce-motion setting
+  to every framer-motion animation.
+- Sounds: `lib/audio/feedback.ts` synthesizes short tones with Web Audio. `useSoundFeedback()`
+  plays them only when `stores/sound-store.ts` (persisted) is enabled; `SoundToggle` sits in the
+  top bar and on the biometric login page.
 
 ## Design tokens
 
@@ -156,7 +231,8 @@ text variants that meet WCAG AA). Dark theme is the default (`next-themes`, clas
 Set in `next.config.ts` for all routes:
 
 - `Content-Security-Policy`: self-only scripts plus `'wasm-unsafe-eval'` (for WASM AI backends),
-  Supabase for `connect-src`/`img-src`, `cdn.jsdelivr.net` in `connect-src` (WASM fallback only),
+  Supabase for `connect-src`/`img-src`, `cdn.jsdelivr.net` in `connect-src` (face WASM fallback
+  only), `huggingface.co` / `*.hf.co` in `connect-src` (voice model download),
   `worker-src 'self' blob:`, `frame-ancestors 'none'`.
 - `Permissions-Policy: camera=(self), microphone=(self)`.
 - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`.

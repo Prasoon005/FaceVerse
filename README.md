@@ -24,9 +24,9 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 | Phase | Scope                                                      | Status   |
 | ----- | ---------------------------------------------------------- | -------- |
 | 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done  |
-| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Built |
-| 3     | Voice engine + multi-factor biometric login                | ⏳ Next  |
-| 4     | Smart visitor log                                          | Planned  |
+| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done  |
+| 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
+| 4     | Smart visitor log                                          | ⏳ Next  |
 | 5     | Event photo finder                                         | Planned  |
 | 6     | Privacy, polish & v1 release                               | Planned  |
 | 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned  |
@@ -35,6 +35,25 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 [docs/phases/](docs/phases/) for each phase's test checklist.
 
 ## Features
+
+**Phase 3: voice + biometric login**
+
+- On-device voice engine: [Transformers.js](https://huggingface.co/docs/transformers.js) running
+  the `Xenova/wavlm-base-plus-sv` speaker-verification model in a Web Worker (512-d embeddings)
+- **MicRecorder** with a live waveform, 16 kHz resampling and energy-based silence trimming
+  (needs at least 2 s of speech)
+- **Challenge phrases** (3 random words + 2 digits), checked with the Web Speech API where the
+  browser supports it
+- Voice step in the enrollment wizard (3 phrases, optional for new people) and "Add voice" for
+  existing people
+- **Biometric login** (`/biometric-login`): email, then liveness, then face, then voice. The
+  `/api/biometric-login` route re-verifies the embeddings with the service role, rate-limits
+  (5 failures / 15 min per account), logs every attempt and issues the session
+- **Settings → Security:** turn biometric login on or off (needs a linked person with face and
+  voice samples) and see recent attempts with their scores
+- **Motion and sound across the app:** page transitions, count-up stats, scan lines, camera flash,
+  voiceprint animation and soft synthesized sound cues, with a mute button in the top bar. Respects
+  the OS reduce-motion setting
 
 **Phase 2: face recognition**
 
@@ -62,8 +81,7 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 - `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
 - CI: lint, format check, typecheck and unit tests on every push/PR
 
-**Coming next:** voice + biometric login (Phase 3), visitor log (Phase 4), event photo finder
-(Phase 5).
+**Coming next:** visitor log (Phase 4), event photo finder (Phase 5).
 
 ## Tech stack
 
@@ -73,6 +91,7 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 | Styling        | Tailwind CSS v4 + shadcn/ui (Radix), CSS-variable design tokens |
 | Icons / Motion | lucide-react, Framer Motion                                     |
 | Face AI        | @vladmandic/human in a Web Worker (Comlink)                     |
+| Voice AI       | Transformers.js (WavLM x-vector) in a Web Worker (Comlink)      |
 | Tables         | TanStack Table v9                                               |
 | Charts         | Recharts                                                        |
 | Forms          | react-hook-form + zod                                           |
@@ -81,8 +100,6 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 | Backend        | Supabase: Auth, Postgres + pgvector, Storage, Realtime          |
 | Testing        | Vitest + React Testing Library (Playwright in Phase 6)          |
 | CI / Hosting   | GitHub Actions, Vercel Hobby, Supabase Free                     |
-
-Voice AI (Transformers.js) is added in Phase 3.
 
 ## Getting started
 
@@ -95,7 +112,7 @@ Voice AI (Transformers.js) is added in Phase 3.
 ### 1. Install
 
 ```bash
-npm install          # also copies the face models into public/models (postinstall)
+npm install          # also copies face models + ONNX Runtime files into public/ (postinstall)
 cp .env.example .env.local
 ```
 
@@ -119,6 +136,7 @@ Either paste each file into the Supabase **SQL Editor** in order:
 1. `supabase/migrations/0001_extensions.sql`
 2. `supabase/migrations/0002_core.sql`
 3. `supabase/migrations/0003_face_matching.sql` (match_faces RPC, people overview, avatars bucket)
+4. `supabase/migrations/0004_biometric_login.sql` (verify_face / verify_voice for biometric login)
 
 …or use the Supabase CLI:
 
@@ -186,14 +204,14 @@ update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
 | `npm test`             | Vitest unit tests                     |
 | `npm run format`       | Prettier write                        |
 | `npm run format:check` | Prettier check (used in CI)           |
-| `npm run models:copy`  | Re-copy face models to public/models  |
+| `npm run models:copy`  | Re-copy AI model/runtime files        |
 
 ## Deploying (free)
 
 1. Push the repo to GitHub.
 2. Import it in [Vercel](https://vercel.com/new) (Hobby plan).
 3. Add the four environment variables from `.env.example`; set `NEXT_PUBLIC_SITE_URL` to your
-   Vercel URL.
+   Vercel URL. Mark `SUPABASE_SERVICE_ROLE_KEY` as **Sensitive**; biometric login needs it.
 4. In Supabase **Authentication → URL Configuration**, set the Site URL to the Vercel URL and add
    `https://<your-app>.vercel.app/auth/callback` to the redirect list.
 5. **Keep-alive:** in GitHub → **Settings → Secrets and variables → Actions**, add a secret
@@ -207,11 +225,13 @@ update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
 docs/                Architecture, changelog, privacy, per-phase checklists
 supabase/            SQL migrations + seed
 src/app/             Routes: (marketing), (auth), (app), api, auth callback
-src/components/      ui (shadcn), layout, shared, auth, marketing, camera, enroll, people, live, charts
+src/components/      ui (shadcn), layout, shared, auth, marketing, camera, voice, enroll, people,
+                     live, charts, settings
 src/config/          site + navigation config
-src/lib/             ai (vector, liveness, quality, tracker, face client), data, supabase, validations
-src/workers/         face.worker.ts (Human, off the main thread)
-src/hooks/           useCamera, useFaceEngine, useDetectionLoop
+src/lib/             ai (vector, liveness, quality, tracker, face/voice clients), audio (resample,
+                     silence trim, phrases, transcription), auth (biometric rules), data, supabase
+src/workers/         face.worker.ts (Human) and voice.worker.ts (Transformers.js), off the main thread
+src/hooks/           useCamera, useMicrophone, useFaceEngine, useVoiceEngine, useDetectionLoop
 scripts/             copy-models.mjs
 src/stores/          Zustand stores
 src/types/           Database types
@@ -233,4 +253,10 @@ stored, every table has Row Level Security, and you can export or delete your bi
 - Free Supabase limits apply (~500 MB database, 1 GB storage, 5 GB egress/month).
 - Face matching thresholds (`src/config/recognition.ts`) are starting values; tune them with
   your own data. If the liveness "turn left/right" prompts feel swapped, flip `yawLeftSign`.
-- First visit to a camera page downloads ~12 MB of models (cached afterwards).
+- First visit to a camera page downloads ~12 MB of models; the first voice feature downloads
+  ~100 MB (both cached afterwards).
+- Voice threshold (0.86, from the model card) and phrase checking are starting values. Speech
+  transcription only works in browsers with the Web Speech API (Chrome, Edge, Safari); elsewhere
+  only the voice itself is checked.
+- Liveness and the phrase check run in the browser, so the server can only re-verify the
+  embeddings. That's why biometric login is an opt-in, demo-grade factor.

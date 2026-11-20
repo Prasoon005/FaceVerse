@@ -1,6 +1,6 @@
 # Privacy at FaceVerse
 
-_Plain-language summary. Updated as features ship (last: Phase 2); the full consent and
+_Plain-language summary. Updated as features ship (last: Phase 3); the full consent and
 data-control screens land in Phase 6._
 
 ## What runs where
@@ -27,6 +27,17 @@ Photos are compressed in your browser before upload and stored in private bucket
 small face thumbnail (about 256 px JPEG) is saved as their profile photo **only if you leave that
 option ticked** on the review step. Deleting a person removes their embeddings, thumbnail and
 recognition history.
+
+**Voice (Phase 3):** recordings are processed in your browser and thrown away; only 3 voice
+embeddings per person are saved. When your browser supports speech recognition, the challenge
+phrase is transcribed to check the words. In Chrome and Edge that transcription is done by the
+browser vendor's speech service, so the audio of that phrase goes to Google or Microsoft (not to
+us). The voice model itself is downloaded once from Hugging Face.
+
+**Biometric login:** the browser sends your face and voice embeddings (never images or audio) to
+our server, which compares them with your enrolled samples. Every attempt is stored with the
+scores, whether liveness passed, the result and a one-way hash of your IP address, so we can
+rate-limit and you can review attempts in Settings → Security.
 
 **Live recognition:** the video never leaves your device. We log one recognition event per person
 at most every 30 seconds (who, similarity, time). Unknown faces are logged without any identity
