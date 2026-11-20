@@ -42,9 +42,9 @@ export const appNav: NavSection[] = [
   {
     title: "Recognition",
     items: [
-      { title: "Live", href: "/live", icon: Radar, comingInPhase: 2 },
-      { title: "People", href: "/people", icon: Users, comingInPhase: 2 },
-      { title: "Enroll", href: "/enroll", icon: UserPlus, comingInPhase: 2 },
+      { title: "Live", href: "/live", icon: Radar },
+      { title: "People", href: "/people", icon: Users },
+      { title: "Enroll", href: "/enroll", icon: UserPlus },
     ],
   },
   {
