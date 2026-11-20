@@ -1,7 +1,7 @@
 /**
  * Supabase database types.
  *
- * Hand-written to mirror supabase/migrations (0001–0002) in the same shape that
+ * Hand-written to mirror supabase/migrations (0001–0003) in the same shape that
  * `supabase gen types typescript` produces. Once your project is linked you can
  * regenerate it with:
  *   npx supabase gen types typescript --project-id <project-ref> > src/types/database.ts
@@ -101,7 +101,15 @@ export type Database = {
           created_at?: string;
         };
         Update: { quality?: number | null };
-        Relationships: Rel[];
+        Relationships: [
+          {
+            foreignKeyName: "face_embeddings_person_id_fkey";
+            columns: ["person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       voice_embeddings: {
         Row: {
@@ -119,7 +127,15 @@ export type Database = {
           created_at?: string;
         };
         Update: Record<string, never>;
-        Relationships: Rel[];
+        Relationships: [
+          {
+            foreignKeyName: "voice_embeddings_person_id_fkey";
+            columns: ["person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       recognition_events: {
         Row: {
@@ -139,7 +155,15 @@ export type Database = {
           created_at?: string;
         };
         Update: Record<string, never>;
-        Relationships: Rel[];
+        Relationships: [
+          {
+            foreignKeyName: "recognition_events_person_id_fkey";
+            columns: ["person_id"];
+            isOneToOne: false;
+            referencedRelation: "people";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       auth_attempts: {
         Row: {
@@ -186,9 +210,31 @@ export type Database = {
         Relationships: Rel[];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      people_overview: {
+        Row: {
+          id: string;
+          owner_id: string;
+          linked_user_id: string | null;
+          name: string;
+          label: string | null;
+          list_type: "none" | "allowed" | "flagged";
+          notes: string | null;
+          avatar_path: string | null;
+          created_at: string;
+          face_samples: number;
+          voice_samples: number;
+          last_seen_at: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };
+      match_faces: {
+        Args: { query: string; match_threshold: number; match_count: number };
+        Returns: { person_id: string; name: string; similarity: number }[];
+      };
     };
     Enums: {
       user_role: "admin" | "member";
@@ -207,3 +253,6 @@ export type TablesUpdate<T extends keyof PublicSchema["Tables"]> =
 export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T];
 
 export type Profile = Tables<"profiles">;
+export type Person = Tables<"people">;
+export type PersonOverview = PublicSchema["Views"]["people_overview"]["Row"];
+export type RecognitionEvent = Tables<"recognition_events">;
