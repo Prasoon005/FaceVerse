@@ -6,6 +6,7 @@ import {
   PHRASE_WORDS,
   phraseMatchScore,
   phrasePassed,
+  scoreTranscript,
 } from "@/lib/audio/phrase";
 
 /** Deterministic PRNG for repeatable phrases. */
@@ -69,6 +70,19 @@ describe("phraseMatchScore", () => {
 
   it("needs digits to match exactly", () => {
     expect(phraseMatchScore(phrase, "river candle orange 5 8")).toBeCloseTo(0.6);
+  });
+});
+
+describe("scoreTranscript", () => {
+  it("treats a missing or empty transcript as not checked", () => {
+    expect(scoreTranscript(phrase, null)).toBeNull();
+    expect(scoreTranscript(phrase, "")).toBeNull();
+    expect(scoreTranscript(phrase, "  ,. ")).toBeNull();
+  });
+
+  it("scores a real transcript, including a wrong one", () => {
+    expect(scoreTranscript(phrase, "river candle orange four seven")).toBe(1);
+    expect(scoreTranscript(phrase, "hello there")).toBe(0);
   });
 });
 

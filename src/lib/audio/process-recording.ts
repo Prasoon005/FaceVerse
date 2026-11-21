@@ -2,7 +2,7 @@
 import { recognitionConfig } from "@/config/recognition";
 import { embedVoice } from "@/lib/ai/voice";
 
-import { type ChallengePhrase, phraseMatchScore } from "./phrase";
+import { type ChallengePhrase, scoreTranscript } from "./phrase";
 import { decodeToMono16k } from "./resample";
 import { trimSilence } from "./vad";
 
@@ -34,7 +34,6 @@ export async function processRecording(
     );
   }
   const embedding = await embedVoice(audio);
-  const phraseScore =
-    recording.transcript === null ? null : phraseMatchScore(phrase, recording.transcript);
+  const phraseScore = scoreTranscript(phrase, recording.transcript);
   return { embedding, phrase, phraseScore, speechSeconds };
 }

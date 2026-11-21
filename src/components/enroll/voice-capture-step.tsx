@@ -91,7 +91,9 @@ function VoiceCaptureStepInner({ onBack, onComplete, onSkip }: Props) {
                 <span className="flex-1 truncate">&ldquo;{s.phrase.text}&rdquo;</span>
                 <span className="font-mono text-xs text-muted-foreground">
                   {s.speechSeconds.toFixed(1)}s
-                  {s.phraseScore !== null ? ` · heard ${Math.round(s.phraseScore * 100)}%` : ""}
+                  {s.phraseScore !== null
+                    ? ` · heard ${Math.round(s.phraseScore * 100)}%`
+                    : " · words not checked"}
                 </span>
                 <Button
                   variant="ghost"

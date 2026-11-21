@@ -81,6 +81,17 @@ export function phraseMatchScore(phrase: ChallengePhrase, transcript: string): n
   return matched / expected.length;
 }
 
+/**
+ * Phrase score for a recording that already passed the speech check (VAD found real speech).
+ * A missing or empty transcript then means speech recognition didn't work on this device
+ * (common on phones, where the recorder already holds the mic), not that the user said
+ * nothing, so the words can't be judged: null, like a browser without speech recognition.
+ */
+export function scoreTranscript(phrase: ChallengePhrase, transcript: string | null): number | null {
+  if (transcript === null || normalizeTranscript(transcript).length === 0) return null;
+  return phraseMatchScore(phrase, transcript);
+}
+
 export function phrasePassed(score: number | null): boolean {
   return score === null || score >= recognitionConfig.voice.phraseMatchRatio;
 }
