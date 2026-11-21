@@ -4,6 +4,10 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 
 const notices: Record<string, { title: string; description: string }> = {
+  confirmed: {
+    title: "Email confirmed",
+    description: "Sign in with your email and password to continue.",
+  },
   link_used: {
     title: "Email link already used",
     description: "Your email is probably confirmed already. Please sign in with your password.",

@@ -38,6 +38,20 @@ function matches(pathname: string, prefixes: string[]) {
  * Real authorisation is enforced by RLS and by the (app) layout's server-side check.
  */
 export async function updateSession(request: NextRequest) {
+  // If Supabase falls back to the Site URL, the auth code lands on "/" (or another page)
+  // instead of /auth/callback. Forward it so the sign-in / email confirmation still completes.
+  const { pathname: path, searchParams: query } = request.nextUrl;
+  if (
+    path !== "/auth/callback" &&
+    (query.has("code") || query.has("token_hash")) &&
+    !path.startsWith("/api/")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/callback";
+    if (!url.searchParams.has("next") && path !== "/") url.searchParams.set("next", path);
+    return NextResponse.redirect(url);
+  }
+
   let response = NextResponse.next({ request });
 
   if (!isSupabaseConfigured()) return response;
