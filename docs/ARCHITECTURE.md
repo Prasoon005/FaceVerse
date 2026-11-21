@@ -274,7 +274,7 @@ Set in `next.config.ts` for all routes:
   Supabase for `connect-src`/`img-src`, `cdn.jsdelivr.net` in `connect-src` (face WASM fallback
   only), `huggingface.co` / `*.hf.co` in `connect-src` (voice model download),
   `worker-src 'self' blob:`, `frame-ancestors 'none'`.
-- `Permissions-Policy: camera=(self), microphone=(self)`.
+- `Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)` (geolocation for the office check-in check).
 - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`.
 
 ## Ops
