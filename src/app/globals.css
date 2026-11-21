@@ -63,6 +63,59 @@
   --radius-4xl: 1.5rem;
 
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Ambient motion used by auth backgrounds, hero cards and loading states. */
+  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-grid-pan: grid-pan 24s linear infinite;
+  --animate-scan-line: scan-line 2.6s ease-in-out infinite;
+
+  @keyframes aurora {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+    50% {
+      transform: translate3d(6%, -4%, 0) scale(1.12) rotate(12deg);
+    }
+    100% {
+      transform: translate3d(-5%, 5%, 0) scale(0.95) rotate(-8deg);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+  @keyframes grid-pan {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 48px 48px;
+    }
+  }
+  @keyframes scan-line {
+    0%,
+    100% {
+      top: 8%;
+    }
+    50% {
+      top: 88%;
+    }
+  }
 }
 
 /* Light theme */
@@ -157,6 +210,45 @@
   --sidebar-accent-foreground: #fafafa;
   --sidebar-border: #1f1f23;
   --sidebar-ring: #6366f1;
+}
+
+/* Admin console accent: violet instead of indigo, so the two portals never look alike. */
+[data-portal="admin"],
+html[data-portal="admin"] {
+  --brand: #9333ea;
+  --primary: #9333ea;
+  --ring: #a855f7;
+  --sidebar-primary: #9333ea;
+  --sidebar-ring: #a855f7;
+  --chart-1: #a855f7;
+}
+.dark [data-portal="admin"],
+html.dark[data-portal="admin"] {
+  --brand: #c084fc;
+  --chart-1: #c084fc;
+}
+
+/* Text with a slow moving gradient (headings on auth and hero screens). */
+.text-gradient {
+  background: linear-gradient(90deg, var(--brand), var(--success), var(--brand));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* Lift-on-hover for interactive cards. */
+.hover-lift {
+  transition:
+    transform 200ms var(--ease-out-soft),
+    box-shadow 200ms var(--ease-out-soft),
+    border-color 200ms;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--brand) 35%, transparent);
+  border-color: color-mix(in oklab, var(--brand) 35%, var(--border));
 }
 
 @layer base {

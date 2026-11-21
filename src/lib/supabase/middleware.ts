@@ -17,7 +17,14 @@ const PROTECTED_PREFIXES = [
   "/tools",
   "/focus",
   "/settings",
+  "/attendance",
+  "/leave",
+  "/announcements",
+  "/identity",
 ];
+/** The admin console has its own sign-in page. */
+const ADMIN_PREFIX = "/admin";
+const ADMIN_LOGIN = "/admin/login";
 const AUTH_PAGES = ["/login", "/signup", "/biometric-login"];
 
 function matches(pathname: string, prefixes: string[]) {
@@ -56,6 +63,13 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const isSignedIn = Boolean(data?.claims);
   const { pathname, search } = request.nextUrl;
+
+  if (!isSignedIn && matches(pathname, [ADMIN_PREFIX]) && pathname !== ADMIN_LOGIN) {
+    const url = request.nextUrl.clone();
+    url.pathname = ADMIN_LOGIN;
+    url.search = `?next=${encodeURIComponent(pathname + search)}`;
+    return redirectWithCookies(url, response);
+  }
 
   if (!isSignedIn && matches(pathname, PROTECTED_PREFIXES)) {
     const url = request.nextUrl.clone();

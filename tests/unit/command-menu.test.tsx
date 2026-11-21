@@ -24,7 +24,7 @@ beforeAll(() => {
 describe("CommandMenu", () => {
   it("renders the search input and navigation items when open", () => {
     useUiStore.setState({ commandOpen: true });
-    render(<CommandMenu />);
+    render(<CommandMenu portal="user" />);
 
     expect(screen.getByPlaceholderText("Type a command or search…")).toBeInTheDocument();
     expect(screen.getByText("Start live scan")).toBeInTheDocument();

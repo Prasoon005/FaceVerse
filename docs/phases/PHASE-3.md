@@ -146,7 +146,7 @@ git add README.md docs
 git commit -m "docs: document phase 3 voice engine, biometric login and UI feedback"
 ```
 
-## What's next — Phase 4
+## What's next — Phase 4A (admin console + attendance), then 4B
 
 Smart visitor log: migration `0005`, visitors page, scan-visitor modal, returning-visitor
 recognition, new-visitor quick form, check-in/out, filters, CSV export, and Realtime updates on

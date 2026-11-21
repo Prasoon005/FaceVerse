@@ -1,12 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowRight, Fingerprint, Info } from "lucide-react";
+import Link from "next/link";
 import { Controller, useForm } from "react-hook-form";
 
 import { FormField } from "@/components/auth/form-field";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -112,26 +112,19 @@ export function DetailsStep({
         ) : null}
       </div>
 
-      <Controller
-        control={control}
-        name="linkToMe"
-        render={({ field }) => (
-          <div className="flex items-start gap-3 rounded-lg border p-3">
-            <Checkbox
-              id="linkToMe"
-              checked={field.value}
-              onCheckedChange={(v) => field.onChange(v === true)}
-              className="mt-0.5"
-            />
-            <div className="grid gap-0.5">
-              <Label htmlFor="linkToMe">This is me</Label>
-              <p className="text-xs text-muted-foreground">
-                Links this identity to your account so you can use biometric login later (Phase 3).
-              </p>
-            </div>
-          </div>
-        )}
-      />
+      <p className="flex gap-2 rounded-lg border border-brand/30 bg-brand/5 p-3 text-xs text-muted-foreground">
+        <Fingerprint className="mt-0.5 size-3.5 shrink-0 text-brand" aria-hidden />
+        <span>
+          Enrolling yourself? Use{" "}
+          <Link
+            href="/identity"
+            className="font-medium text-foreground underline-offset-4 hover:underline"
+          >
+            My identity
+          </Link>{" "}
+          instead. It&apos;s needed for attendance and biometric login.
+        </span>
+      </p>
 
       <p className="flex gap-2 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
         <Info className="mt-0.5 size-3.5 shrink-0" aria-hidden />

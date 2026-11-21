@@ -3,6 +3,104 @@
 All notable changes to this project are documented here, grouped by build phase.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 4A, part 2] Admin portal, final identity, announcements, leave & kiosk — 2026-11-21
+
+Your "final idea" on top of part 1: two separate portals, a locked biometric identity, and the
+extras for a stronger mini project.
+
+### Added
+
+- **Migration `0006_admin_portal.sql`:** `people.biometrics_locked` / `locked_at` (existing
+  self-enrollments with samples start locked), triggers that stop users creating, deleting or
+  changing their own identity or its samples directly, `identity_change_requests`,
+  `announcements` + `announcement_reads`, `leave_requests`, `attendance.source`
+  (`self` / `kiosk`) and `identify_user()` (service role only) for the kiosk.
+- **Separate admin portal:** `/admin/login` (its own violet look, signs non-admins straight back
+  out), its own shell and navigation; admins are redirected out of the user app. Users sign in at
+  `/login` as before.
+- **My identity** (`/identity`): guided face → voice → confirm wizard, a "these are final"
+  warning with a hold-to-confirm button, then `POST /api/identity` stores the samples on the
+  server and locks them. The locked card shows a status timeline and "Request a change"; an admin
+  approval unlocks one re-enrollment. The old "This is me" checkbox is gone.
+- **Announcements:** admins post to everyone or one user (normal / important / urgent, pin), with
+  a live preview and read counts. Users get a feed, the bell, and a live pop-up for important ones.
+- **Leave requests:** users request leave (casual / sick / personal / other); admins approve or
+  reject. Approved days show as **On leave (L)** in calendars, reports and CSV, never absent.
+- **Kiosk mode** (`/admin/kiosk`): a shared device identifies whoever looks at it (liveness, then
+  best match with a margin over the runner-up) and checks them in or out, with a full-screen
+  welcome animation.
+- **Analytics** (`/admin/analytics`): 30-day attendance trend, weekday chart, top and
+  needs-attention lists, average check-in time, kiosk share, identity enrollment breakdown.
+- **Audit log** (`/admin/audit`), **user detail page** (`/admin/users/[id]`) with a private
+  "Message" button, **change requests** and **leave requests** boards, and a to-do strip on the
+  admin dashboard.
+- **More dynamic UI:** animated aurora backgrounds on sign-in pages, a welcome hero on the user
+  dashboard, attendance streak and rate ring, hover-lift cards, animated step transitions.
+
+## [Phase 4A] Admin console & face attendance — 2026-11-21
+
+Added at your request on top of the spec (approved before building). The spec's visitor log
+moves to **Phase 4B**.
+
+### Added
+
+- **Migration `0005_admin_attendance.sql`:**
+  - `people.approval_status` (pending / approved / rejected) plus reviewer columns. A trigger
+    makes account-linked self-enrollments `pending` for non-admins and stops users changing the
+    review fields. Existing people stay approved.
+  - `profiles.disabled`.
+  - `attendance` (one row per user per day), `absence_reviews` (question → reason + proof →
+    decision) and `attendance_settings` (working days, timezone).
+  - Private `absence-proofs` bucket; admins can read avatars for the approval queue.
+  - `verify_face` / `verify_voice` count only approved people.
+  - Realtime publication for `attendance`, `absence_reviews` and `people`.
+- **Attendance** (`/attendance`, for everyone): "Mark attendance" runs liveness, then a face
+  capture on the same track, then `POST /api/attendance` verifies the face on the server against
+  the user's own approved enrollment and records the check-in (second scan = check-out). Also a
+  month calendar with present / absent / excused / pending / day off, a detail panel, "Explain
+  absence", and live admin questions at the top. Answers can include a compressed photo or PDF
+  proof.
+- **Admin console** (`/admin`, admins only; everyone else gets a 404):
+  - Overview: live stats, today's check-ins, last working day's absentees with "Ask reason".
+  - Users: role, disabled status, face enrollment, people count, this month's attendance rate.
+    Actions: make or remove admin, disable or enable (also bans the account in Supabase Auth),
+    delete biometric data, delete account. Destructive actions need typed confirmation.
+  - Approvals: self-enrolled faces with thumbnails; approve, or reject with a note.
+  - Attendance report: users × days grid for a date range (up to 62 days), legend, per-user
+    totals and rate, CSV export, and click an absent day to ask for a reason.
+  - Absence reviews: "To decide", "Waiting for reply" and "Decided" tabs; read the reason, open
+    the proof, approve (excused) or reject with a note.
+  - Workspace settings: working days and timezone.
+- Admin changes go through **Server Actions** (`src/lib/actions/admin.ts`) that re-check the
+  caller is an active admin, write with the service role, log to `audit_logs` and call
+  `refresh()`.
+- **Live notifications bell:** absence questions, decisions and approval results for users;
+  pending approvals and replies for admins. It updates through Supabase Realtime and shakes and
+  chimes when a new to-do arrives. The admin pages and attendance page show a "Live" indicator and
+  refresh themselves when data changes.
+- **Navigation:** Attendance for everyone, and an Admin section only for admins (sidebar and
+  command palette). The most specific link is highlighted.
+- Disabled accounts see an "Account disabled" screen; biometric login and attendance refuse them.
+- Settings → Security adds an "Approved by an admin" requirement; person pages show the approval
+  state; the enrollment done screen explains when approval is needed.
+- **Tests:** day maths (timezones, month ranges, weekdays), day status rules, summaries and CSV
+  escaping.
+
+### Changed
+
+- The admin's own Dashboard, People list and Scores panel now show only their own data. Admins
+  can read every row through RLS, so these queries filter by `owner_id`; everyone's data lives in
+  `/admin`.
+
+### Deviations from the spec
+
+- **New feature set (approved):** roles in practice, approvals, attendance and absence reviews
+  aren't in the spec. The schema additions are listed above.
+- Migration numbering: admin + attendance is `0005`, so visitors and albums become **0006** and
+  **0007**.
+- CSV export uses a small built-in RFC 4180 writer instead of `papaparse`, so no new dependency
+  was needed.
+
 ## [Phase 3] Voice engine & multi-factor biometric login — 2026-11-21
 
 ### Added

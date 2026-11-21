@@ -68,7 +68,8 @@ export function SecuritySettings() {
   }
 
   const { enabled, linkedPerson, requirements, attempts } = status.data;
-  const ready = requirements.linked && requirements.face && requirements.voice;
+  const ready =
+    requirements.linked && requirements.approved && requirements.face && requirements.voice;
   const { faceMin, voice } = recognitionConfig.samples;
   const personHref = linkedPerson ? `/people/${linkedPerson.id}` : "/enroll";
 
@@ -100,13 +101,26 @@ export function SecuritySettings() {
             <Requirement
               ok={requirements.linked}
               label="A person linked to your account"
-              hint="Enroll yourself with “This is me” ticked."
+              hint="Set up your face and voice in My identity."
               action={
                 requirements.linked ? null : (
                   <Button size="sm" variant="outline" asChild>
-                    <Link href="/enroll">Enroll yourself</Link>
+                    <Link href="/identity">Open My identity</Link>
                   </Button>
                 )
+              }
+            />
+            <Requirement
+              ok={requirements.approved}
+              label="Approved by an admin"
+              hint={
+                !requirements.linked
+                  ? undefined
+                  : linkedPerson?.approval_status === "rejected"
+                    ? `Rejected${linkedPerson.review_note ? `: ${linkedPerson.review_note}` : ""}`
+                    : linkedPerson?.approval_status === "pending"
+                      ? "Waiting for an admin"
+                      : undefined
               }
             />
             <Requirement

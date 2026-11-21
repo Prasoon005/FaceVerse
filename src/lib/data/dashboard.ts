@@ -37,31 +37,40 @@ export function bucketByDay(
 
 export async function getDashboardData() {
   const supabase = await createClient();
+  // Admins can read every row through RLS; the dashboard shows only the caller's own data.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const ownerId = user?.id ?? "";
   const now = new Date();
   const dayAgo = new Date(now.getTime() - DAY_MS).toISOString();
   const chartStart = new Date(now.getTime() - CHART_DAYS * DAY_MS).toISOString();
 
   const [people, recognised, unknown, series, recent] = await Promise.all([
-    supabase.from("people").select("id", { count: "exact", head: true }),
+    supabase.from("people").select("id", { count: "exact", head: true }).eq("owner_id", ownerId),
     supabase
       .from("recognition_events")
       .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId)
       .not("person_id", "is", null)
       .gte("created_at", dayAgo),
     supabase
       .from("recognition_events")
       .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId)
       .is("person_id", null)
       .gte("created_at", dayAgo),
     supabase
       .from("recognition_events")
       .select("created_at, person_id")
+      .eq("owner_id", ownerId)
       .gte("created_at", chartStart)
       .order("created_at", { ascending: true })
       .limit(5000),
     supabase
       .from("recognition_events")
       .select("id, person_id, similarity, source, created_at, people(name)")
+      .eq("owner_id", ownerId)
       .order("created_at", { ascending: false })
       .limit(8),
   ]);

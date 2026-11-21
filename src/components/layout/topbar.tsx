@@ -3,6 +3,7 @@
 import { Menu, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import type { Portal } from "@/config/site";
 import { useUiStore } from "@/stores/ui-store";
 
 import { Breadcrumbs } from "./breadcrumbs";
@@ -11,7 +12,7 @@ import { SoundToggle } from "./sound-toggle";
 import { ThemeToggle } from "./theme-toggle";
 import { type ShellUser, UserMenu } from "./user-menu";
 
-export function Topbar({ user }: { user: ShellUser }) {
+export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
   const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen);
   const setCommandOpen = useUiStore((s) => s.setCommandOpen);
 
@@ -52,8 +53,8 @@ export function Topbar({ user }: { user: ShellUser }) {
         </Button>
         <SoundToggle />
         <ThemeToggle />
-        <NotificationsBell />
-        <UserMenu user={user} />
+        <NotificationsBell portal={portal} />
+        <UserMenu user={user} portal={portal} />
       </div>
     </header>
   );

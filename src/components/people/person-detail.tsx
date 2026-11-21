@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AudioLines, Camera, Link2, Mic, ScanFace, Trash2 } from "lucide-react";
+import { AudioLines, Camera, Fingerprint, Link2, Lock, Mic, ScanFace, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -73,6 +73,8 @@ export function PersonDetail({ id }: { id: string }) {
   }
 
   const { person, samples, events } = data;
+  // The user's own identity is managed (and locked) on the My identity page.
+  const isSelf = Boolean(person.linked_user_id);
 
   return (
     <div className="grid gap-6">
@@ -92,24 +94,51 @@ export function PersonDetail({ id }: { id: string }) {
                 <Link2 aria-hidden /> Linked account
               </Badge>
             ) : null}
+            {person.biometrics_locked ? (
+              <Badge variant="outline">
+                <Lock aria-hidden /> Final
+              </Badge>
+            ) : null}
+            {person.linked_user_id && person.approval_status !== "approved" ? (
+              <Badge
+                variant="outline"
+                className={
+                  person.approval_status === "pending"
+                    ? "text-warning-foreground"
+                    : "text-danger-foreground"
+                }
+              >
+                {person.approval_status === "pending"
+                  ? "Awaiting admin approval"
+                  : "Rejected by admin"}
+              </Badge>
+            ) : null}
             <span>Last seen {formatRelative(person.last_seen_at).toLowerCase()}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        {isSelf ? (
           <Button variant="outline" asChild>
-            <Link href={`/enroll?person=${person.id}`}>
-              <Camera aria-hidden /> Add samples
+            <Link href="/identity">
+              <Fingerprint aria-hidden /> Manage in My identity
             </Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href={`/enroll?person=${person.id}&mode=voice`}>
-              <Mic aria-hidden /> Add voice
-            </Link>
-          </Button>
-          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-            <Trash2 aria-hidden /> Delete
-          </Button>
-        </div>
+        ) : (
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href={`/enroll?person=${person.id}`}>
+                <Camera aria-hidden /> Add samples
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/enroll?person=${person.id}&mode=voice`}>
+                <Mic aria-hidden /> Add voice
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+              <Trash2 aria-hidden /> Delete
+            </Button>
+          </div>
+        )}
       </div>
 
       {person.notes ? (
@@ -133,9 +162,11 @@ export function PersonDetail({ id }: { id: string }) {
                 title="No samples"
                 description="This person can't be recognised until you add face samples."
                 action={
-                  <Button size="sm" asChild>
-                    <Link href={`/enroll?person=${person.id}`}>Add samples</Link>
-                  </Button>
+                  isSelf ? undefined : (
+                    <Button size="sm" asChild>
+                      <Link href={`/enroll?person=${person.id}`}>Add samples</Link>
+                    </Button>
+                  )
                 }
               />
             ) : (
@@ -150,15 +181,17 @@ export function PersonDetail({ id }: { id: string }) {
                     <span className="ml-auto text-xs text-muted-foreground">
                       {formatRelative(s.created_at)}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      aria-label={`Delete sample ${samples.length - i}`}
-                      disabled={removeSample.isPending}
-                      onClick={() => removeSample.mutate(s.id)}
-                    >
-                      <Trash2 aria-hidden />
-                    </Button>
+                    {isSelf ? null : (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Delete sample ${samples.length - i}`}
+                        disabled={removeSample.isPending}
+                        onClick={() => removeSample.mutate(s.id)}
+                      >
+                        <Trash2 aria-hidden />
+                      </Button>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -180,24 +213,28 @@ export function PersonDetail({ id }: { id: string }) {
                 title="No voice samples"
                 description="Record 3 short phrases to enable voice verification."
                 action={
-                  <Button size="sm" asChild>
-                    <Link href={`/enroll?person=${person.id}&mode=voice`}>Add voice samples</Link>
-                  </Button>
+                  isSelf ? undefined : (
+                    <Button size="sm" asChild>
+                      <Link href={`/enroll?person=${person.id}&mode=voice`}>Add voice samples</Link>
+                    </Button>
+                  )
                 }
               />
             ) : (
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <AudioLines className="size-4 text-muted-foreground" aria-hidden />
                 <span className="font-medium">{person.voice_samples} phrases</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="ml-auto"
-                  disabled={removeVoice.isPending}
-                  onClick={() => removeVoice.mutate()}
-                >
-                  <Trash2 aria-hidden /> Delete voice samples
-                </Button>
+                {isSelf ? null : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto"
+                    disabled={removeVoice.isPending}
+                    onClick={() => removeVoice.mutate()}
+                  >
+                    <Trash2 aria-hidden /> Delete voice samples
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>

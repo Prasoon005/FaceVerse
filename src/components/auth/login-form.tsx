@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, ScanFace } from "lucide-react";
+import { LoaderCircle, ScanFace, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -82,6 +82,16 @@ export function LoginForm({ next }: { next: string }) {
           Create an account
         </Link>
       </p>
+      <Link
+        href="/admin/login"
+        className="group mx-auto inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs text-muted-foreground transition-colors hover:border-brand/50 hover:text-foreground"
+      >
+        <ShieldCheck className="size-3.5 text-brand" aria-hidden /> Administrator? Sign in to the
+        admin console
+        <span aria-hidden className="transition-transform group-hover:translate-x-0.5">
+          →
+        </span>
+      </Link>
     </div>
   );
 }

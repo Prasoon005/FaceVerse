@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useId } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { appNav, type NavItem } from "@/config/site";
+import { type NavItem, navFor, type Portal } from "@/config/site";
 import { cn } from "@/lib/utils";
 
 export function isActive(pathname: string, href: string) {
@@ -17,18 +17,26 @@ export function isActive(pathname: string, href: string) {
 export function NavLinks({
   collapsed = false,
   onNavigate,
+  portal,
 }: {
   collapsed?: boolean;
   onNavigate?: () => void;
+  portal: Portal;
 }) {
   const pathname = usePathname();
+  const sections = navFor(portal);
+  // The most specific match wins, so /admin/users highlights "Users", not "Admin overview".
+  const activeHref = sections
+    .flatMap((s) => s.items.map((i) => i.href))
+    .filter((href) => isActive(pathname, href))
+    .sort((a, b) => b.length - a.length)[0];
   // Scopes the sliding highlight to this instance (sidebar and mobile drawer).
   const groupId = useId();
 
   return (
     <LayoutGroup id={groupId}>
       <nav aria-label="Main" className="grid gap-5">
-        {appNav.map((section) => (
+        {sections.map((section) => (
           <div key={section.title} className="grid gap-1">
             {collapsed ? (
               <span className="sr-only">{section.title}</span>
@@ -42,7 +50,7 @@ export function NavLinks({
                 <li key={item.href}>
                   <NavLink
                     item={item}
-                    active={isActive(pathname, item.href)}
+                    active={item.href === activeHref}
                     collapsed={collapsed}
                     onNavigate={onNavigate}
                   />

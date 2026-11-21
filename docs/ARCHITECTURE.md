@@ -1,6 +1,6 @@
 # Architecture
 
-_Last updated: Phase 3 (2026-11-21)._
+_Last updated: Phase 4A (2026-11-21)._
 
 ## Overview
 
@@ -28,13 +28,13 @@ does similarity search with pgvector.
 
 ## Routing
 
-| Route group   | Paths                                                                                                                                   | Notes                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
-| `(marketing)` | `/`                                                                                                                                     | Static landing page                    |
-| `(auth)`      | `/login`, `/signup`, `/biometric-login`                                                                                                 | Centered card layout                   |
-| `(app)`       | `/dashboard`, `/activity`, `/live`, `/people`, `/enroll`, `/visitors`, `/albums`, `/tools`, `/focus`, `/settings`, `/settings/security` | Sidebar + topbar shell, requires login |
-| `auth/*`      | `/auth/callback` (GET), `/auth/signout` (POST)                                                                                          | Session exchange / sign-out            |
-| `api/*`       | `/api/health`, `/api/biometric-login` (POST)                                                                                            | Keep-alive probe                       |
+| Route group   | Paths                                                                                                                                                                            | Notes                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `(marketing)` | `/`                                                                                                                                                                              | Static landing page                    |
+| `(auth)`      | `/login`, `/signup`, `/biometric-login`                                                                                                                                          | Centered card layout                   |
+| `(app)`       | `/dashboard`, `/activity`, `/live`, `/people`, `/enroll`, `/visitors`, `/albums`, `/tools`, `/focus`, `/settings`, `/settings/security`, `/attendance`, `/admin/*` (admins only) | Sidebar + topbar shell, requires login |
+| `auth/*`      | `/auth/callback` (GET), `/auth/signout` (POST)                                                                                                                                   | Session exchange / sign-out            |
+| `api/*`       | `/api/health`, `/api/biometric-login` (POST), `/api/attendance` (POST)                                                                                                           | Keep-alive probe                       |
 
 ## Authentication flow
 
@@ -80,7 +80,20 @@ service role (revoked from `PUBLIC`, `anon` and `authenticated`):
 - `user_id_by_email(email)`: email → user id for the login route.
 - An `auth_attempts (ip_hash, created_at)` index for per-IP rate limiting.
 
-Later phases add `visitor_logs` (0005), `albums` / `album_photos` / `photo_faces` (0006) and
+`0005_admin_attendance.sql` (Phase 4A) adds:
+
+- `people.approval_status` (+ `reviewed_by`, `reviewed_at`, `review_note`). The trigger
+  `people_enforce_approval` sets account-linked self-enrollments to `pending` for non-admins and
+  keeps the review fields read-only for them. `verify_face` / `verify_voice` require `approved`.
+- `profiles.disabled` (not in the user-updatable column grant).
+- `attendance` (`unique (user_id, day)`), `absence_reviews` (`unique (user_id, day)`, status
+  `asked → answered → approved | rejected`), `attendance_settings` (single row). Users read their
+  own rows, admins read all; **only server code (service role) writes**.
+- Private `absence-proofs` bucket (`<uid>/<file>`; owner + admin read). Admins can read
+  `avatars`.
+- Realtime publication for `attendance`, `absence_reviews`, `people`.
+
+Later phases add `visitor_logs` (0006), `albums` / `album_photos` / `photo_faces` (0007) and
 `find_in_album`.
 
 ### Row Level Security
@@ -158,6 +171,27 @@ biometric login is an opt-in, demo-grade factor.
 The voice model files come from the Hugging Face Hub (cached by the browser's Cache API). The ONNX
 Runtime WASM files are self-hosted under `/ort` (copied by `scripts/copy-models.mjs`).
 
+## Admin console and attendance (Phase 4A)
+
+- **Access:** `(app)/admin/layout.tsx` calls `requireAdminPage()`, which returns 404 for
+  non-admins. Every admin **Server Action** (`src/lib/actions/admin.ts`) calls `requireAdmin()`
+  again (Server Actions are reachable by direct POST), writes with the service role, inserts an
+  `audit_logs` row and calls `refresh()`.
+- **Per-user privacy is unchanged:** admins can _read_ everything through the existing
+  "admin read" RLS policies, so the admin's own Dashboard, People and Scores queries filter by
+  `owner_id`. Cross-user views live only under `/admin` (loaded server-side with the service
+  role, including emails from `auth.admin.listUsers`).
+- **Attendance:** `LivenessChallenge captureFace` → `POST /api/attendance` → the server checks
+  the session, the user's approved linked person and `verify_face` ≥ face match, then inserts
+  today's row (workspace timezone) or sets `check_out_at`.
+- **Day status** (`lib/attendance/days.ts`): present if there's a row; otherwise upcoming,
+  untracked (before joining), day off (not a working day), excused / pending (review), today (not
+  yet), else absent.
+- **Live updates:** `LiveUpdates` (admin pages and `/attendance`) and `NotificationsBell`
+  subscribe to `postgres_changes`; RLS limits users to their own rows.
+- **Disabled accounts:** `setUserDisabled` bans the auth user and sets `profiles.disabled`; the
+  `(app)` layout shows "Account disabled", and the login/attendance routes refuse them.
+
 ## Front-end structure
 
 ```text
@@ -175,6 +209,9 @@ src/
                           VoiceScan
     enroll/               EnrollWizard + Details / FaceCapture / VoiceCapture / Review / Done steps
     settings/             SecuritySettings
+    attendance/           CheckInCard, AttendanceCalendar, AbsenceQuestions, AbsenceAnswerDialog
+    admin/                LiveUpdates, UsersTable, ApprovalQueue, AttendanceReport, ReviewBoard,
+                          AbsentList, AskReasonDialog, WorkspaceSettingsForm
     people/               PeopleTable, PersonDetail, PersonAvatar, ListTypeBadge
     live/                 LiveRecognition, InFramePanel, ScoresPanel
     charts/               RecognitionsChart
@@ -192,6 +229,9 @@ src/
   lib/audio/              resample, vad (silence trim), phrase, transcribe, process-recording,
                           feedback (UI sounds)
   lib/auth/biometric.ts   login request schema, decision rules, lockout window
+  lib/attendance/days.ts  timezone-aware days, day status, summaries, CSV
+  lib/admin/              server.ts (getViewer, requireAdmin), data.ts (workspace users)
+  lib/actions/            Server Actions: admin.ts, attendance.ts
   lib/data/               people, recognition, dashboard (server), security
   lib/supabase/           client.ts, server.ts, admin.ts (service role, server only),
                           middleware.ts (updateSession), env.ts

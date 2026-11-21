@@ -21,20 +21,37 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 
 ## Status
 
-| Phase | Scope                                                      | Status  |
-| ----- | ---------------------------------------------------------- | ------- |
-| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done |
-| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done |
-| 3     | Voice engine + multi-factor biometric login                | ✅ Done |
-| 4     | Smart visitor log                                          | ⏳ Next |
-| 5     | Event photo finder                                         | Planned |
-| 6     | Privacy, polish & v1 release                               | Planned |
-| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned |
+| Phase | Scope                                                      | Status   |
+| ----- | ---------------------------------------------------------- | -------- |
+| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done  |
+| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done  |
+| 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
+| 4A    | Admin portal, final identity, attendance, leave, kiosk     | ✅ Built |
+| 4B    | Smart visitor log                                          | ⏳ Next  |
+| 5     | Event photo finder                                         | Planned  |
+| 6     | Privacy, polish & v1 release                               | Planned  |
+| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned  |
 
 See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 [docs/phases/](docs/phases/) for each phase's test checklist.
 
 ## Features
+
+**Phase 4A: admin portal + attendance**
+
+- **Two portals:** users sign in at `/login`; admins have their own sign-in (`/admin/login`) and
+  console. Users only ever see their own data; admins see and manage everyone
+- **My identity** (`/identity`): users enroll their face + voice once; after a "these are final"
+  confirmation it's **locked**. Changing it needs a request that an admin approves (one
+  re-enrollment). An admin also approves each enrollment before it counts
+- **Face attendance** (`/attendance`): liveness + face check on your own phone, verified on the
+  server; first scan = check-in, second = check-out. Calendar, streak and monthly rate
+- **Kiosk mode:** a shared device at the door recognises anyone with an approved identity
+- **Leave requests** and **absence reviews** (reason + optional proof), decided by the admin
+- **Announcements** to everyone or one user, with live pop-ups for important ones
+- **Admin console:** dashboard with to-dos, analytics charts, users (with a detail page), approvals,
+  change requests, attendance report with CSV export, leave, reviews, audit log, settings
+- **Live updates** everywhere (Supabase Realtime) with sound and animation
 
 **Phase 3: voice + biometric login**
 
@@ -81,7 +98,7 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 - `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
 - CI: lint, format check, typecheck and unit tests on every push/PR
 
-**Coming next:** visitor log (Phase 4), event photo finder (Phase 5).
+**Coming next:** visitor log (Phase 4B), event photo finder (Phase 5).
 
 ## Tech stack
 
@@ -137,6 +154,7 @@ Either paste each file into the Supabase **SQL Editor** in order:
 2. `supabase/migrations/0002_core.sql`
 3. `supabase/migrations/0003_face_matching.sql` (match_faces RPC, people overview, avatars bucket)
 4. `supabase/migrations/0004_biometric_login.sql` (verify_face / verify_voice for biometric login)
+5. `supabase/migrations/0005_admin_attendance.sql` (approvals, attendance, absence reviews, settings)
 
 …or use the Supabase CLI:
 
@@ -186,11 +204,14 @@ npm run dev
 
 Open <http://localhost:3000>, sign up, and you land on the dashboard.
 
-To make yourself an admin, run in the SQL editor:
+To make yourself an admin (needed for `/admin`), run in the SQL editor:
 
 ```sql
-update public.profiles set role = 'admin' where id = '<your-auth-user-id>';
+update public.profiles set role = 'admin'
+where id = (select id from auth.users where email = 'you@example.com');
 ```
+
+After that, other admins can be made from **Admin → Users**.
 
 ## Scripts
 

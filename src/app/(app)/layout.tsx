@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { AccountDisabled } from "@/components/layout/account-disabled";
 import type { ShellUser } from "@/components/layout/user-menu";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,9 +19,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, avatar_url, role")
+    .select("full_name, avatar_url, role, disabled")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Admin-disabled accounts are also banned in Supabase Auth; this covers a still-valid session.
+  if (profile?.disabled) return <AccountDisabled email={user.email ?? ""} />;
+
+  // Admins have their own console; the user app is for members only.
+  if (profile?.role === "admin") redirect("/admin");
 
   const shellUser: ShellUser = {
     email: user.email ?? "",
@@ -29,5 +36,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     role: profile?.role ?? "member",
   };
 
-  return <AppShell user={shellUser}>{children}</AppShell>;
+  return (
+    <AppShell user={shellUser} portal="user">
+      {children}
+    </AppShell>
+  );
 }

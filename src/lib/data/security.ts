@@ -7,9 +7,9 @@ export const securityKeys = { status: ["security", "status"] as const };
 
 export type SecurityStatus = {
   enabled: boolean;
-  /** The linked person with the most samples (verification uses all linked people). */
+  /** The linked person (approved first, then most samples); verification uses all approved ones. */
   linkedPerson: PersonOverview | null;
-  requirements: { linked: boolean; face: boolean; voice: boolean };
+  requirements: { linked: boolean; approved: boolean; face: boolean; voice: boolean };
   attempts: AuthAttempt[];
 };
 
@@ -37,9 +37,12 @@ export async function getSecurityStatus(): Promise<SecurityStatus> {
   if (people.error) throw people.error;
   if (attempts.error) throw attempts.error;
 
+  // Prefer an approved person, then the one with the most samples.
   const linkedPerson =
     [...people.data].sort(
-      (a, b) => b.face_samples + b.voice_samples - (a.face_samples + a.voice_samples),
+      (a, b) =>
+        Number(b.approval_status === "approved") - Number(a.approval_status === "approved") ||
+        b.face_samples + b.voice_samples - (a.face_samples + a.voice_samples),
     )[0] ?? null;
   const { faceMin, voice } = recognitionConfig.samples;
 
@@ -48,6 +51,7 @@ export async function getSecurityStatus(): Promise<SecurityStatus> {
     linkedPerson,
     requirements: {
       linked: linkedPerson !== null,
+      approved: linkedPerson?.approval_status === "approved",
       face: (linkedPerson?.face_samples ?? 0) >= faceMin,
       voice: (linkedPerson?.voice_samples ?? 0) >= voice,
     },

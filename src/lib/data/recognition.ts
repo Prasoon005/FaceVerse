@@ -79,9 +79,12 @@ export function computeCalibration(
 
 /** Loads the caller's enrolled face samples and summarises how well they separate. */
 export async function getCalibrationStats(): Promise<CalibrationStats> {
-  const { data, error } = await createClient()
+  const supabase = createClient();
+  const { data: session } = await supabase.auth.getSession();
+  const { data, error } = await supabase
     .from("face_embeddings")
-    .select("person_id, embedding");
+    .select("person_id, embedding")
+    .eq("owner_id", session.session?.user.id ?? "");
   if (error) throw error;
   return computeCalibration(
     data.map((row) => ({ personId: row.person_id, embedding: parsePgVector(row.embedding) })),

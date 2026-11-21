@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { RecognitionsChart } from "@/components/charts/recognitions-chart";
+import { WelcomeHero } from "@/components/dashboard/welcome-hero";
 import { ConfidenceRing } from "@/components/shared/confidence-ring";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Stagger, StaggerItem, StaggerList, StaggerListItem } from "@/components/shared/motion";
@@ -59,8 +60,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="grid gap-6">
+      <WelcomeHero />
       <PageHeader
-        title="Dashboard"
+        title="Recognition overview"
         description="Overview of enrolments, recognitions and visitors."
         actions={
           <Button asChild>

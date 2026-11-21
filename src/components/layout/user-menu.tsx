@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, ShieldCheck } from "lucide-react";
+import { Fingerprint, LogOut, Settings, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Portal } from "@/config/site";
 
 export type ShellUser = {
   email: string;
@@ -31,13 +32,13 @@ function initials(name: string) {
     .join("");
 }
 
-export function UserMenu({ user }: { user: ShellUser }) {
+export function UserMenu({ user, portal = "user" }: { user: ShellUser; portal?: Portal }) {
   const router = useRouter();
   const displayName = user.fullName || user.email;
 
   async function signOut() {
     await fetch("/auth/signout", { method: "POST" });
-    router.replace("/login");
+    router.replace(portal === "admin" ? "/admin/login" : "/login");
     router.refresh();
   }
 
@@ -64,16 +65,31 @@ export function UserMenu({ user }: { user: ShellUser }) {
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href="/settings">
-            <Settings aria-hidden /> Settings
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/settings/security">
-            <ShieldCheck aria-hidden /> Security
-          </Link>
-        </DropdownMenuItem>
+        {portal === "admin" ? (
+          <DropdownMenuItem asChild>
+            <Link href="/admin/settings">
+              <Settings aria-hidden /> Workspace settings
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          <>
+            <DropdownMenuItem asChild>
+              <Link href="/identity">
+                <Fingerprint aria-hidden /> My identity
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings">
+                <Settings aria-hidden /> Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/settings/security">
+                <ShieldCheck aria-hidden /> Security
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuItem onSelect={signOut}>
           <LogOut aria-hidden /> Sign out
         </DropdownMenuItem>

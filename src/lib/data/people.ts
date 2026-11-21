@@ -52,9 +52,12 @@ export async function signAvatarUrls(paths: (string | null)[]): Promise<Map<stri
 }
 
 export async function listPeople(): Promise<PersonListItem[]> {
-  const { data, error } = await createClient()
+  // Admins can read everyone's people through RLS; this list is always the caller's own.
+  const { supabase, userId } = await requireUserId();
+  const { data, error } = await supabase
     .from("people_overview")
     .select("*")
+    .eq("owner_id", userId)
     .order("created_at", { ascending: false });
   if (error) throw error;
   const urls = await signAvatarUrls(data.map((p) => p.avatar_path));
@@ -110,7 +113,6 @@ export async function createPerson(input: NewPersonInput): Promise<Person> {
       label: input.label?.trim() || null,
       list_type: input.listType,
       notes: input.notes?.trim() || null,
-      linked_user_id: input.linkToMe ? userId : null,
     })
     .select()
     .single();

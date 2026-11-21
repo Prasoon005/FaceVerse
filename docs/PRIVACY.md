@@ -1,6 +1,6 @@
 # Privacy at FaceVerse
 
-_Plain-language summary. Updated as features ship (last: Phase 3); the full consent and
+_Plain-language summary. Updated as features ship (last: Phase 4A); the full consent and
 data-control screens land in Phase 6._
 
 ## What runs where
@@ -38,6 +38,13 @@ us). The voice model itself is downloaded once from Hugging Face.
 our server, which compares them with your enrolled samples. Every attempt is stored with the
 scores, whether liveness passed, the result and a one-way hash of your IP address, so we can
 rate-limit and you can review attempts in Settings → Security.
+
+**Attendance and admins (Phase 4A):** an admin in your workspace can see everyone's data in
+the admin console, including your attendance, enrolled people and absence reasons. Other users
+can't. Attendance stores the date, check-in/out times and the face match score; the face check
+itself runs on your phone and only the embedding is sent for verification. Absence proofs you
+upload are stored privately and only you and admins can open them. Your own face enrollment must
+be approved by an admin before it's used for attendance or biometric login.
 
 **Live recognition:** the video never leaves your device. We log one recognition event per person
 at most every 30 seconds (who, similarity, time). Unknown faces are logged without any identity

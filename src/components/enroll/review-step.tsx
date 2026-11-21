@@ -47,7 +47,6 @@ export function ReviewStep({
           {details && details.listType !== "none" ? (
             <Badge variant="outline">{listTypeLabels[details.listType]}</Badge>
           ) : null}
-          {details?.linkToMe ? <Badge variant="outline">Linked to my account</Badge> : null}
         </div>
         {details?.notes ? <p className="text-sm text-muted-foreground">{details.notes}</p> : null}
       </div>

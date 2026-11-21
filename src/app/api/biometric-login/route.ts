@@ -87,10 +87,14 @@ export async function POST(request: Request) {
   }
 
   const { data: profile } = userId
-    ? await admin.from("profiles").select("biometric_login_enabled").eq("id", userId).maybeSingle()
+    ? await admin
+        .from("profiles")
+        .select("biometric_login_enabled, disabled")
+        .eq("id", userId)
+        .maybeSingle()
     : { data: null };
 
-  if (!userId || !profile?.biometric_login_enabled) {
+  if (!userId || !profile?.biometric_login_enabled || profile.disabled) {
     await admin.from("auth_attempts").insert({
       user_id: userId ?? null,
       liveness_passed: livenessPassed,

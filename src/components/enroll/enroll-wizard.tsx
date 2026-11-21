@@ -53,7 +53,11 @@ export function EnrollWizard({
   const [samples, setSamples] = useState<CapturedSample[]>([]);
   const [voiceSamples, setVoiceSamples] = useState<VoiceSample[]>([]);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState<{ id: string; name: string } | null>(null);
+  const [saved, setSaved] = useState<{
+    id: string;
+    name: string;
+    pendingApproval: boolean;
+  } | null>(null);
 
   const steps = [
     ...(personId ? [] : [{ id: "details", label: "Details" }]),
@@ -80,11 +84,13 @@ export function EnrollWizard({
     try {
       let id = personId;
       let name = existing.data?.person.name ?? "";
+      let pendingApproval = existing.data?.person.approval_status === "pending";
       if (!id) {
         if (!details) throw new Error("Missing person details");
         const person = await createPerson(details);
         id = person.id;
         name = person.name;
+        pendingApproval = person.approval_status === "pending";
       }
       if (samples.length > 0) {
         await addFaceSamples(
@@ -109,7 +115,7 @@ export function EnrollWizard({
         voice_samples: voiceSamples.length,
       });
       await queryClient.invalidateQueries({ queryKey: peopleKeys.all });
-      setSaved({ id, name });
+      setSaved({ id, name, pendingApproval });
       setStep("done");
     } catch (err) {
       toast.error("Couldn't save enrollment", {
@@ -188,7 +194,12 @@ export function EnrollWizard({
       ) : null}
 
       {step === "done" && saved ? (
-        <DoneStep name={saved.name} personId={saved.id} onEnrollAnother={reset} />
+        <DoneStep
+          name={saved.name}
+          personId={saved.id}
+          pendingApproval={saved.pendingApproval}
+          onEnrollAnother={reset}
+        />
       ) : null}
     </div>
   );

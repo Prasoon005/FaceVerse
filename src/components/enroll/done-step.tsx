@@ -18,10 +18,13 @@ const burstColors = ["bg-brand", "bg-success", "bg-warning"];
 export function DoneStep({
   name,
   personId,
+  pendingApproval = false,
   onEnrollAnother,
 }: {
   name: string;
   personId: string;
+  /** A self-enrollment that an admin still has to approve. */
+  pendingApproval?: boolean;
   onEnrollAnother: () => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -56,6 +59,12 @@ export function DoneStep({
       <p className="max-w-sm text-sm text-muted-foreground">
         Their face samples are saved. Open live recognition to see them identified in real time.
       </p>
+      {pendingApproval ? (
+        <p className="max-w-sm rounded-lg border border-warning/40 bg-warning/5 p-3 text-sm">
+          This is you, so an admin needs to approve it before you can mark attendance or use
+          biometric login. You&apos;ll get a notification.
+        </p>
+      ) : null}
       <div className="flex flex-wrap justify-center gap-2">
         <Button asChild>
           <Link href="/live">

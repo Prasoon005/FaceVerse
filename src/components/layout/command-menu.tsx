@@ -1,6 +1,16 @@
 "use client";
 
-import { Album, LogOut, Moon, Radar, UserPlus } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarRange,
+  Fingerprint,
+  LogOut,
+  Megaphone,
+  MonitorSmartphone,
+  Moon,
+  Radar,
+  UserPlus,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -16,17 +26,26 @@ import {
   CommandSeparator,
   CommandShortcut,
 } from "@/components/ui/command";
-import { appNav } from "@/config/site";
+import { navFor, type Portal } from "@/config/site";
 import { useUiStore } from "@/stores/ui-store";
 
-const quickActions = [
-  { label: "Enroll new person", href: "/enroll", icon: UserPlus },
-  { label: "Start live scan", href: "/live", icon: Radar },
-  { label: "New album", href: "/albums", icon: Album },
-];
+const quickActions: Record<Portal, { label: string; href: string; icon: typeof Radar }[]> = {
+  user: [
+    { label: "Mark attendance", href: "/attendance", icon: CalendarCheck },
+    { label: "Start live scan", href: "/live", icon: Radar },
+    { label: "Enroll new person", href: "/enroll", icon: UserPlus },
+    { label: "Request leave", href: "/leave", icon: CalendarRange },
+    { label: "My identity", href: "/identity", icon: Fingerprint },
+  ],
+  admin: [
+    { label: "Post announcement", href: "/admin/announcements", icon: Megaphone },
+    { label: "Open kiosk mode", href: "/admin/kiosk", icon: MonitorSmartphone },
+    { label: "Attendance report", href: "/admin/attendance", icon: CalendarCheck },
+  ],
+};
 
 /** Global Ctrl/Cmd + K palette: navigate anywhere and run quick actions. */
-export function CommandMenu() {
+export function CommandMenu({ portal = "user" }: { portal?: Portal }) {
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const open = useUiStore((s) => s.commandOpen);
@@ -50,7 +69,7 @@ export function CommandMenu() {
 
   async function signOut() {
     await fetch("/auth/signout", { method: "POST" });
-    router.replace("/login");
+    router.replace(portal === "admin" ? "/admin/login" : "/login");
     router.refresh();
   }
 
@@ -67,7 +86,7 @@ export function CommandMenu() {
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Quick actions">
-            {quickActions.map((a) => (
+            {quickActions[portal].map((a) => (
               <CommandItem key={a.label} onSelect={() => run(() => router.push(a.href))}>
                 <a.icon aria-hidden />
                 {a.label}
@@ -75,7 +94,7 @@ export function CommandMenu() {
             ))}
           </CommandGroup>
           <CommandSeparator />
-          {appNav.map((section) => (
+          {navFor(portal).map((section) => (
             <CommandGroup key={section.title} heading={section.title}>
               {section.items.map((item) => (
                 <CommandItem
