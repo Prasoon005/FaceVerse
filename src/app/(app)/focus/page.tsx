@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { FocusTracker } from "@/components/focus/focus-tracker";
+import { PageHeader } from "@/components/shared/page-header";
 
 export const metadata: Metadata = { title: "Focus" };
 
 export default function FocusPage() {
   return (
-    <ComingSoon
-      title="Focus"
-      description="Track focus and drowsiness while you study or work."
-      phase={7}
-    />
+    <div className="grid gap-6">
+      <PageHeader
+        title="Focus"
+        description="Study or work with the camera on: see your focus score and get an alert when you look sleepy."
+      />
+      <FocusTracker />
+    </div>
   );
 }

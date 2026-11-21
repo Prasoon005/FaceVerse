@@ -8,6 +8,7 @@ import {
   type IdentitySummary,
 } from "@/components/identity/identity-card";
 import { IdentityWizard } from "@/components/identity/identity-wizard";
+import { ConsentGate } from "@/components/privacy/consent-gate";
 import { PageHeader } from "@/components/shared/page-header";
 import { getViewer } from "@/lib/admin/server";
 
@@ -24,7 +25,7 @@ export default async function IdentityPage() {
   if (!viewer) redirect("/login");
   const { supabase, user } = viewer;
 
-  const [{ data: people }, { data: requests }] = await Promise.all([
+  const [{ data: people }, { data: requests }, { data: consent }] = await Promise.all([
     supabase
       .from("people_overview")
       .select("*")
@@ -37,6 +38,7 @@ export default async function IdentityPage() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(10),
+    supabase.from("profiles").select("consent_given_at").eq("id", user.id).maybeSingle(),
   ]);
 
   const identity =
@@ -90,7 +92,9 @@ export default async function IdentityPage() {
         </p>
       ) : null}
       {showWizard ? (
-        <IdentityWizard isChange={approvedChange || Boolean(identity)} />
+        <ConsentGate consented={Boolean(consent?.consent_given_at)}>
+          <IdentityWizard isChange={approvedChange || Boolean(identity)} />
+        </ConsentGate>
       ) : summary ? (
         <IdentityCard identity={summary} requests={history} />
       ) : null}

@@ -46,6 +46,18 @@ export const recognitionConfig = {
     /** A captured face is reused for voice retries only this long. */
     faceReuseSeconds: 180,
   },
+  albums: {
+    /**
+     * Group photos are smaller, angled and less sharp than enrollment captures, so "Find me"
+     * uses a lower bar than live recognition; results at or above face.match are "sure",
+     * the rest "possible".
+     */
+    findThreshold: 0.55,
+    /** Uploads are compressed to this longest side (PROJECT_SPEC §6). */
+    maxSide: 1600,
+    /** Faces smaller than this (px) are skipped: too small to match reliably. */
+    minFaceSize: 40,
+  },
   samples: {
     faceMin: 3,
     faceMax: 5,

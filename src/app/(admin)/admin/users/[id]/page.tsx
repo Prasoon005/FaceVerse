@@ -4,6 +4,7 @@ import {
   CalendarCheck,
   CalendarRange,
   Gauge,
+  MessagesSquare,
   Lock,
   LockOpen,
   Mail,
@@ -187,7 +188,16 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
             ) : null}
           </div>
         </div>
-        {user.role === "member" ? <MessageUserButton userId={user.id} name={user.name} /> : null}
+        {user.role === "member" ? (
+          <div className="flex flex-wrap gap-2">
+            <Button asChild>
+              <Link href={`/admin/messages?user=${user.id}`}>
+                <MessagesSquare aria-hidden /> Chat
+              </Link>
+            </Button>
+            <MessageUserButton userId={user.id} name={user.name} />
+          </div>
+        ) : null}
       </section>
 
       <Stagger className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

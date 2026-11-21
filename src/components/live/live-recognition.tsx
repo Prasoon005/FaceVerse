@@ -104,7 +104,22 @@ export function LiveRecognition() {
             const last = chimedRef.current.get(match.personId) ?? -Infinity;
             if (Date.now() - last > live.logThrottleMs) {
               chimedRef.current.set(match.personId, Date.now());
-              sound.play("recognized");
+              // Watchlist (X3): a flagged person gets an alarm and a persistent alert.
+              const person = people.data?.find((p) => p.id === match.personId);
+              if (person?.list_type === "flagged") {
+                sound.play("error");
+                setTimeout(() => sound.play("error"), 350);
+                toast.error(`Flagged person in view: ${person.name}`, {
+                  description: "This person is on your watchlist.",
+                  duration: 10_000,
+                });
+                if (typeof navigator !== "undefined" && "vibrate" in navigator)
+                  navigator.vibrate?.([200, 100, 200]);
+              } else {
+                sound.play("recognized");
+                if (person?.list_type === "allowed")
+                  toast.success(`${person.name} (allowed) arrived`);
+              }
             }
           } else if (match.status === "unknown" && current.attempts === 1) {
             sound.play("unknown");

@@ -10,6 +10,7 @@ import { Breadcrumbs } from "./breadcrumbs";
 import { NotificationsBell } from "./notifications-bell";
 import { SoundToggle } from "./sound-toggle";
 import { ThemeToggle } from "./theme-toggle";
+import { VoiceCommandButton } from "./voice-command-button";
 import { type ShellUser, UserMenu } from "./user-menu";
 
 export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
@@ -51,6 +52,7 @@ export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
         >
           <Search aria-hidden />
         </Button>
+        <VoiceCommandButton portal={portal} />
         <SoundToggle />
         <ThemeToggle />
         <NotificationsBell portal={portal} />

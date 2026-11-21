@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { PageHeader } from "@/components/shared/page-header";
+import { ToolsHub } from "@/components/tools/tools-hub";
 
 export const metadata: Metadata = { title: "Tools" };
 
 export default function ToolsPage() {
   return (
-    <ComingSoon
-      title="Tools"
-      description="Face compare, privacy blur and group tagging."
-      phase={7}
-    />
+    <div className="grid gap-6">
+      <PageHeader
+        title="Tools"
+        description="Compare two faces, or blur faces in a photo before sharing it. Nothing leaves your device."
+      />
+      <ToolsHub />
+    </div>
   );
 }

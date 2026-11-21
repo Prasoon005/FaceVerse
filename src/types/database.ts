@@ -1,7 +1,7 @@
 /**
  * Supabase database types.
  *
- * Hand-written to mirror supabase/migrations (0001–0008) in the same shape that
+ * Hand-written to mirror supabase/migrations (0001–0010) in the same shape that
  * `supabase gen types typescript` produces. Once your project is linked you can
  * regenerate it with:
  *   npx supabase gen types typescript --project-id <project-ref> > src/types/database.ts
@@ -439,6 +439,93 @@ export type Database = {
         };
         Relationships: Rel[];
       };
+      albums: {
+        Row: {
+          id: string;
+          owner_id: string;
+          title: string;
+          event_date: string | null;
+          share_code: string;
+          is_public: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          title: string;
+          event_date?: string | null;
+          is_public?: boolean;
+          created_at?: string;
+        };
+        Update: { title?: string; event_date?: string | null; is_public?: boolean };
+        Relationships: Rel[];
+      };
+      album_photos: {
+        Row: {
+          id: string;
+          album_id: string;
+          owner_id: string;
+          storage_path: string;
+          width: number | null;
+          height: number | null;
+          size_bytes: number | null;
+          face_count: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          album_id: string;
+          owner_id: string;
+          storage_path: string;
+          width?: number | null;
+          height?: number | null;
+          size_bytes?: number | null;
+          face_count?: number;
+          created_at?: string;
+        };
+        Update: { face_count?: number };
+        Relationships: Rel[];
+      };
+      photo_faces: {
+        Row: {
+          id: string;
+          photo_id: string;
+          album_id: string;
+          owner_id: string;
+          embedding: string;
+          box: Json;
+        };
+        Insert: {
+          id?: string;
+          photo_id: string;
+          album_id: string;
+          owner_id: string;
+          embedding: string;
+          box: Json;
+        };
+        Update: Record<string, never>;
+        Relationships: Rel[];
+      };
+      messages: {
+        Row: {
+          id: string;
+          thread_user_id: string;
+          sender_id: string | null;
+          body: string;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          thread_user_id: string;
+          sender_id: string;
+          body: string;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: { read_at?: string | null };
+        Relationships: Rel[];
+      };
       leave_requests: {
         Row: {
           id: string;
@@ -509,6 +596,15 @@ export type Database = {
       verify_face: { Args: { target_user: string; query: string }; Returns: number };
       verify_voice: { Args: { target_user: string; query: string }; Returns: number };
       user_id_by_email: { Args: { target_email: string }; Returns: string | null };
+      find_in_album: {
+        Args: { target_album: string; query: string; match_threshold: number };
+        Returns: { photo_id: string; similarity: number; box: Json }[];
+      };
+      // Service role only (public share page).
+      find_in_shared_album: {
+        Args: { code: string; query: string; match_threshold: number };
+        Returns: { photo_id: string; similarity: number; box: Json }[];
+      };
       // Service role only (kiosk attendance).
       identify_user: {
         Args: { query: string };
@@ -551,3 +647,6 @@ export type IdentityChangeRequest = Tables<"identity_change_requests">;
 export type Announcement = Tables<"announcements">;
 export type LeaveRequest = Tables<"leave_requests">;
 export type VisitorLog = Tables<"visitor_logs">;
+export type Album = Tables<"albums">;
+export type AlbumPhoto = Tables<"album_photos">;
+export type Message = Tables<"messages">;

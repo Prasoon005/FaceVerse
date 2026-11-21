@@ -30,6 +30,9 @@ const LABELS: Record<string, string> = {
   "person.enroll": "enrolled a person",
   "person.add_samples": "added samples to a person",
   "person.delete": "deleted a person",
+  "privacy.consent": "gave biometric consent",
+  "privacy.export": "exported their data",
+  "privacy.delete_biometrics": "deleted all their biometric data",
 };
 
 export function actionLabel(action: string) {

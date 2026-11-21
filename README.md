@@ -28,14 +28,23 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 | 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
 | 4A    | Admin portal, final identity, attendance, leave, kiosk     | ✅ Built |
 | 4B    | Smart visitor log                                          | ✅ Built |
-| 5     | Event photo finder                                         | ⏳ Next  |
-| 6     | Privacy, polish & v1 release                               | Planned  |
-| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned  |
+| 5     | Event photo finder                                         | ✅ Built |
+| 6     | Privacy, polish & v1 release                               | ✅ Built |
+| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | ✅ Most  |
 
 See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 [docs/phases/](docs/phases/) for each phase's test checklist.
 
 ## Features
+
+**Phases 5–7: photo finder, privacy, tools**
+
+- **Event photo finder:** upload an album (faces indexed in the browser), take a selfie, get every
+  photo you're in, download them as a ZIP; public share links let guests do the same
+- **Privacy:** consent before enrollment, export my data (JSON), delete all my biometrics,
+  storage usage meter, activity timeline
+- **Tools:** 1:1 face compare, privacy blur, focus/drowsiness tracker, voice commands, duplicate
+  enrollment warning, watchlist alerts for flagged people, installable PWA
 
 **Phase 4B: smart visitor log**
 
@@ -106,7 +115,7 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 - `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
 - CI: lint, format check, typecheck and unit tests on every push/PR
 
-**Coming next:** event photo finder (Phase 5).
+**Not built yet:** group photo auto-tagging, two-person verification, video blur, offline mode.
 
 ## Tech stack
 

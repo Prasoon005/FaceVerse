@@ -13,6 +13,7 @@ import {
   type LucideIcon,
   Megaphone,
   MessageSquareText,
+  MessagesSquare,
   MonitorSmartphone,
   Radar,
   RefreshCcwDot,
@@ -56,6 +57,7 @@ export const userNav: NavSection[] = [
       { title: "Leave", href: "/leave", icon: CalendarRange },
       { title: "Reasons & score", href: "/reasons", icon: Gauge },
       { title: "Announcements", href: "/announcements", icon: Megaphone },
+      { title: "Messages", href: "/messages", icon: MessagesSquare },
     ],
   },
   {
@@ -74,10 +76,10 @@ export const userNav: NavSection[] = [
   {
     title: "Modules",
     items: [
-      { title: "Activity", href: "/activity", icon: Activity, comingInPhase: 6 },
-      { title: "Albums", href: "/albums", icon: Album, comingInPhase: 5 },
-      { title: "Tools", href: "/tools", icon: Wrench, comingInPhase: 7 },
-      { title: "Focus", href: "/focus", icon: Target, comingInPhase: 7 },
+      { title: "Activity", href: "/activity", icon: Activity },
+      { title: "Albums", href: "/albums", icon: Album },
+      { title: "Tools", href: "/tools", icon: Wrench },
+      { title: "Focus", href: "/focus", icon: Target },
     ],
   },
   {
@@ -115,6 +117,7 @@ export const adminNav: NavSection[] = [
   {
     title: "Workspace",
     items: [
+      { title: "Messages", href: "/admin/messages", icon: MessagesSquare },
       { title: "Announcements", href: "/admin/announcements", icon: Megaphone },
       { title: "Audit log", href: "/admin/audit", icon: History },
       { title: "Workspace settings", href: "/admin/settings", icon: Settings },

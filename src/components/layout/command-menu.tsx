@@ -37,9 +37,11 @@ const quickActions: Record<Portal, { label: string; href: string; icon: typeof R
     { label: "Request leave", href: "/leave", icon: CalendarRange },
     { label: "Explain absence / late", href: "/reasons", icon: CalendarCheck },
     { label: "My identity", href: "/identity", icon: Fingerprint },
+    { label: "Message admin", href: "/messages", icon: Megaphone },
   ],
   admin: [
     { label: "Post announcement", href: "/admin/announcements", icon: Megaphone },
+    { label: "Messages", href: "/admin/messages", icon: Megaphone },
     { label: "Open kiosk mode", href: "/admin/kiosk", icon: MonitorSmartphone },
     { label: "Attendance report", href: "/admin/attendance", icon: CalendarCheck },
   ],

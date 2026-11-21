@@ -3,6 +3,36 @@
 All notable changes to this project are documented here, grouped by build phase.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Messaging & mobile fit] — 2026-11-21
+
+### Added
+
+- **Messages** (migration `0010_messages.sql`): live chat between each member and the admin team
+  (one thread per member; any admin can reply). Users: `/messages`. Admins: `/admin/messages`
+  inbox with unread badges and search, plus a **Chat** button on the user page. Read ticks,
+  day separators, sound and bell notifications.
+
+### Fixed
+
+- Pages no longer get wider than phone/tablet screens: grid and card children can shrink, so
+  wide tables and charts scroll inside their own box.
+
+## [Phases 5–7] Photo finder, privacy, stretch tools — 2026-11-21
+
+### Added
+
+- **Migration `0009_albums.sql`:** `albums`, `album_photos`, `photo_faces` (pgvector + HNSW),
+  `find_in_album` (owner, RLS) and `find_in_shared_album` (public albums, service role), private
+  `album-photos` bucket.
+- **Event photo finder:** albums, upload with compression + in-browser face indexing and
+  per-file progress, masonry grid, "Find me" (camera or uploaded selfie) with outlined matches,
+  ZIP download (JSZip), public share page `/share/<code>`.
+- **Privacy:** consent gate before enrollment, Settings → Privacy (consent, storage meter, JSON
+  export with optional embeddings, delete all my biometrics), Activity page.
+- **Stretch:** face compare and privacy blur (`/tools`), focus/drowsiness tracker (`/focus`),
+  voice commands with spoken feedback, duplicate-enrollment warning, watchlist alerts for flagged
+  people in Live, web app manifest (installable).
+
 ## [Phase 4B] Smart visitor log — 2026-11-21
 
 ### Added

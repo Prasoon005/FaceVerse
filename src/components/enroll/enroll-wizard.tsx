@@ -5,7 +5,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import Link from "next/link";
+
 import { EmptyState } from "@/components/shared/empty-state";
+import { Button } from "@/components/ui/button";
 import { StepperRail } from "@/components/shared/stepper-rail";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { VoiceSample } from "@/lib/audio/process-recording";
@@ -18,6 +21,7 @@ import {
   peopleKeys,
   uploadAvatar,
 } from "@/lib/data/people";
+import { matchFace } from "@/lib/data/recognition";
 import type { PersonInput } from "@/lib/validations/person";
 
 import { DetailsStep } from "./details-step";
@@ -53,6 +57,12 @@ export function EnrollWizard({
   const [samples, setSamples] = useState<CapturedSample[]>([]);
   const [voiceSamples, setVoiceSamples] = useState<VoiceSample[]>([]);
   const [saving, setSaving] = useState(false);
+  /** M5: the new face already matches someone in the list. */
+  const [duplicate, setDuplicate] = useState<{
+    id: string;
+    name: string;
+    similarity: number;
+  } | null>(null);
   const [saved, setSaved] = useState<{
     id: string;
     name: string;
@@ -158,6 +168,17 @@ export function EnrollWizard({
           onComplete={(captured) => {
             setSamples(captured);
             setStep(personId ? "review" : "voice");
+            setDuplicate(null);
+            // Duplicate check for new people only (re-enrolling adds to the same person).
+            if (!personId && captured[0]) {
+              void matchFace(captured[0].embedding)
+                .then((m) => {
+                  if (m.status === "match" && m.personId && m.name && m.similarity !== null) {
+                    setDuplicate({ id: m.personId, name: m.name, similarity: m.similarity });
+                  }
+                })
+                .catch(() => undefined);
+            }
           }}
         />
       ) : null}
@@ -178,6 +199,23 @@ export function EnrollWizard({
             setStep("review");
           }}
         />
+      ) : null}
+
+      {step === "review" && duplicate ? (
+        <div
+          role="alert"
+          className="flex max-w-2xl flex-wrap items-center gap-3 rounded-xl border border-warning/50 bg-warning/5 p-4 text-sm"
+        >
+          <span className="flex-1">
+            This face looks like <strong>{duplicate.name}</strong>, who is already enrolled (
+            {Math.round(duplicate.similarity * 100)}% match). Saving creates a duplicate.
+          </span>
+          <Button size="sm" variant="outline" asChild>
+            <Link href={`/enroll?person=${duplicate.id}`}>
+              Add samples to {duplicate.name} instead
+            </Link>
+          </Button>
+        </div>
       ) : null}
 
       {step === "review" ? (

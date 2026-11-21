@@ -273,6 +273,24 @@ html.dark[data-portal="admin"] {
     min-height: 100dvh;
     font-feature-settings: "cv11", "ss01";
   }
+  /*
+   * Grid and flex children default to min-width: auto, so a wide table or chart inside a card
+   * stretches the card (and the page) past the screen on phones. min-width: 0 lets them shrink
+   * and the table scrolls inside its own box instead.
+   */
+  .grid > *,
+  [data-slot="card"],
+  [data-slot="card-content"],
+  [data-slot="tabs-content"],
+  main {
+    min-width: 0;
+  }
+  img,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;

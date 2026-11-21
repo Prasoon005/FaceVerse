@@ -11,6 +11,7 @@ import {
   Megaphone,
   MessageCircleQuestion,
   MessageSquareText,
+  MessagesSquare,
   RefreshCcwDot,
   ShieldCheck,
 } from "lucide-react";
@@ -40,6 +41,7 @@ const icons: Record<NotificationKind, typeof Bell> = {
   "identity-change": RefreshCcwDot,
   leave: CalendarRange,
   visitor: DoorOpen,
+  message: MessagesSquare,
   "admin-approvals": ClipboardCheck,
   "admin-replies": MessageSquareText,
   "admin-changes": RefreshCcwDot,
@@ -53,6 +55,7 @@ const LIVE_TABLES = [
   "leave_requests",
   "announcements",
   "visitor_logs",
+  "messages",
 ];
 
 /** Live notifications: questions, decisions, announcements, and admin to-dos. */

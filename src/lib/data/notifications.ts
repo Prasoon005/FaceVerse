@@ -2,6 +2,8 @@
 import type { Portal } from "@/config/site";
 import { createClient } from "@/lib/supabase/client";
 
+import { unreadMessages } from "./messages";
+
 export type NotificationKind =
   | "question"
   | "decision"
@@ -10,6 +12,7 @@ export type NotificationKind =
   | "identity-change"
   | "leave"
   | "visitor"
+  | "message"
   | "admin-approvals"
   | "admin-replies"
   | "admin-changes"
@@ -238,10 +241,27 @@ export async function getNotifications(portal: Portal): Promise<NotificationItem
   const { data: session } = await supabase.auth.getSession();
   const userId = session.session?.user.id;
   if (!userId) return [];
-  const items =
+  const [items, unread] = await Promise.all([
     portal === "admin"
-      ? await adminNotifications()
-      : await memberNotifications(userId, new Date(Date.now() - WEEK_MS).toISOString());
+      ? adminNotifications()
+      : memberNotifications(userId, new Date(Date.now() - WEEK_MS).toISOString()),
+    unreadMessages(portal === "admin", userId),
+  ]);
+  if (unread.count > 0 && unread.latest) {
+    items.push({
+      id: "messages",
+      kind: "message",
+      title:
+        portal === "admin"
+          ? `${unread.count} new message${unread.count === 1 ? "" : "s"} from ${unread.threads} user${unread.threads === 1 ? "" : "s"}`
+          : `${unread.count} new message${unread.count === 1 ? "" : "s"} from your admin`,
+      body: unread.latest.body,
+      href:
+        portal === "admin" ? `/admin/messages?user=${unread.latest.thread_user_id}` : "/messages",
+      at: unread.latest.created_at,
+      actionable: true,
+    });
+  }
   return items.sort(
     (a, b) => Number(b.actionable) - Number(a.actionable) || (b.at ?? "").localeCompare(a.at ?? ""),
   );

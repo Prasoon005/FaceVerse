@@ -30,7 +30,7 @@ export function MessageUserButton({ userId, name }: { userId: string; name: stri
   return (
     <>
       <Button variant="outline" onClick={() => setOpen(true)}>
-        <MessageSquarePlus aria-hidden /> Message
+        <MessageSquarePlus aria-hidden /> Announce
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

@@ -7,7 +7,13 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "Settings" };
 
-const sections = [
+const sections: {
+  title: string;
+  description: string;
+  href?: string;
+  icon: typeof ShieldCheck;
+  comingInPhase?: number;
+}[] = [
   {
     title: "Security",
     description: "Biometric login (face + voice) and recent sign-in attempts.",
@@ -15,10 +21,10 @@ const sections = [
     icon: ShieldCheck,
   },
   {
-    title: "Profile, appearance & privacy",
+    title: "Privacy",
     description: "Consent, data export, delete my biometrics and storage usage.",
+    href: "/settings/privacy",
     icon: SlidersHorizontal,
-    comingInPhase: 6,
   },
 ];
 
