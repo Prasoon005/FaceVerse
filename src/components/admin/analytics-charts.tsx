@@ -12,6 +12,8 @@ import {
   YAxis,
 } from "recharts";
 
+import { areaCursor, glassTooltip, gridProps, tooltipLabelStyle } from "@/lib/ui/chart-theme";
+
 export type TrendPoint = { day: string; rate: number | null; present: number; expected: number };
 export type WeekdayPoint = { label: string; rate: number | null };
 
@@ -19,14 +21,6 @@ const dayLabel = (iso: string) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(
     new Date(`${iso}T00:00:00Z`),
   );
-
-const tooltipStyle = {
-  background: "var(--popover)",
-  border: "1px solid var(--border)",
-  borderRadius: 8,
-  fontSize: 12,
-  color: "var(--popover-foreground)",
-};
 
 const pct = (v: unknown) => (typeof v === "number" ? `${Math.round(v)}%` : "–");
 
@@ -38,7 +32,7 @@ export function AttendanceTrendChart({ data }: { data: TrendPoint[] }) {
     : null;
   return (
     <div
-      className="h-64 w-full"
+      className="chart-glow h-64 w-full"
       role="img"
       aria-label={`Attendance rate over the last ${data.length} working days${avg === null ? "" : `, average ${avg}%`}.`}
     >
@@ -46,11 +40,12 @@ export function AttendanceTrendChart({ data }: { data: TrendPoint[] }) {
         <AreaChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
           <defs>
             <linearGradient id="fill-rate" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.35} />
+              <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.4} />
+              <stop offset="60%" stopColor="var(--chart-1)" stopOpacity={0.08} />
               <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <CartesianGrid {...gridProps} />
           <XAxis
             dataKey="day"
             tickFormatter={dayLabel}
@@ -69,7 +64,9 @@ export function AttendanceTrendChart({ data }: { data: TrendPoint[] }) {
             stroke="var(--muted-foreground)"
           />
           <Tooltip
-            contentStyle={tooltipStyle}
+            cursor={areaCursor}
+            contentStyle={glassTooltip}
+            labelStyle={tooltipLabelStyle}
             labelFormatter={(v) => dayLabel(String(v))}
             formatter={(value, _name, item) => {
               const p = item.payload as TrendPoint;
@@ -81,7 +78,7 @@ export function AttendanceTrendChart({ data }: { data: TrendPoint[] }) {
             dataKey="rate"
             name="Attendance"
             stroke="var(--chart-1)"
-            strokeWidth={2}
+            strokeWidth={2.5}
             fill="url(#fill-rate)"
             connectNulls
             activeDot={{ r: 5, strokeWidth: 2, stroke: "var(--card)" }}
@@ -96,10 +93,20 @@ export function AttendanceTrendChart({ data }: { data: TrendPoint[] }) {
 /** Average attendance rate per weekday (single series). */
 export function WeekdayChart({ data }: { data: WeekdayPoint[] }) {
   return (
-    <div className="h-56 w-full" role="img" aria-label="Average attendance rate by weekday.">
+    <div
+      className="chart-glow h-56 w-full"
+      role="img"
+      aria-label="Average attendance rate by weekday."
+    >
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
-          <CartesianGrid vertical={false} stroke="var(--border)" />
+          <defs>
+            <linearGradient id="fill-bar" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={1} />
+              <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.55} />
+            </linearGradient>
+          </defs>
+          <CartesianGrid {...gridProps} />
           <XAxis
             dataKey="label"
             tickLine={false}
@@ -116,13 +123,14 @@ export function WeekdayChart({ data }: { data: WeekdayPoint[] }) {
             stroke="var(--muted-foreground)"
           />
           <Tooltip
-            cursor={{ fill: "var(--muted)", opacity: 0.5 }}
-            contentStyle={tooltipStyle}
+            cursor={{ fill: "var(--foreground)", opacity: 0.04, radius: 8 }}
+            contentStyle={glassTooltip}
+            labelStyle={tooltipLabelStyle}
             formatter={(value) => [pct(value), "Average"]}
           />
           <Bar
             dataKey="rate"
-            fill="var(--chart-1)"
+            fill="url(#fill-bar)"
             radius={[4, 4, 0, 0]}
             maxBarSize={36}
             animationDuration={900}

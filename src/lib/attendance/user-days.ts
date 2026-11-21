@@ -74,6 +74,7 @@ export async function loadUserDays({
         today,
         joinedDay,
         workDays: settings.work_days,
+        holidays: settings.holidays,
         attendance: record,
         review,
         onLeave: leaveDays.has(day),

@@ -33,6 +33,8 @@ export type Database = {
           consent_given_at: string | null;
           created_at: string;
           disabled: boolean;
+          phone: string | null;
+          department: string | null;
         };
         Insert: {
           id: string;
@@ -48,6 +50,8 @@ export type Database = {
           avatar_url?: string | null;
           biometric_login_enabled?: boolean;
           consent_given_at?: string | null;
+          phone?: string | null;
+          department?: string | null;
           /** Service role only (admin actions); not granted to users. */
           role?: Database["public"]["Enums"]["user_role"];
           disabled?: boolean;
@@ -319,6 +323,10 @@ export type Database = {
           deduct_late: number;
           deduct_excused: number;
           deduct_late_excused: number;
+          geofence_enabled: boolean;
+          office_lat: number | null;
+          office_lng: number | null;
+          office_radius_m: number;
         };
         Insert: { id?: number; work_days?: number[]; timezone?: string; updated_at?: string };
         Update: {
@@ -332,7 +340,17 @@ export type Database = {
           deduct_late?: number;
           deduct_excused?: number;
           deduct_late_excused?: number;
+          geofence_enabled?: boolean;
+          office_lat?: number | null;
+          office_lng?: number | null;
+          office_radius_m?: number;
         };
+        Relationships: [];
+      };
+      holidays: {
+        Row: { day: string; name: string; created_by: string | null; created_at: string };
+        Insert: { day: string; name: string; created_by?: string | null; created_at?: string };
+        Update: { day?: string; name?: string };
         Relationships: [];
       };
       identity_change_requests: {
@@ -643,6 +661,7 @@ export type AuthAttempt = Tables<"auth_attempts">;
 export type Attendance = Tables<"attendance">;
 export type AbsenceReview = Tables<"absence_reviews">;
 export type AttendanceSettings = Tables<"attendance_settings">;
+export type Holiday = Tables<"holidays">;
 export type IdentityChangeRequest = Tables<"identity_change_requests">;
 export type Announcement = Tables<"announcements">;
 export type LeaveRequest = Tables<"leave_requests">;

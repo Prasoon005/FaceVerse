@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Download, Filter } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Filter } from "lucide-react";
 import { useState } from "react";
 
 import { statusStyle } from "@/components/attendance/status-style";
@@ -48,11 +48,20 @@ const LEGEND: DayStatus[] = [
   "late",
   "absent",
   "leave",
+  "holiday",
   "excused",
   "pending",
   "off",
   "today",
 ];
+
+const escapeHtml = (v: string) => v.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+
+/** Days that counted towards attendance (attended, absent, excused or pending). */
+function workingDays(r: ReportRow) {
+  const s = r.summary;
+  return s.present + s.late + s.absent + s.excused + s.pending;
+}
 
 /** Users × days grid with a legend, date-range filter, CSV export and "Ask reason". */
 export function AttendanceReport({
@@ -102,13 +111,83 @@ export function AttendanceReport({
       r.rate == null ? "" : `${Math.round(r.rate * 100)}%`,
       `${r.score}/${r.scoreBase}`,
     ]);
-    const blob = new Blob(["﻿" + toCsv([header, ...body])], {
-      type: "text/csv;charset=utf-8",
-    });
+    download(toCsv([header, ...body]), `attendance-${from}-to-${to}.csv`);
+  }
+
+  /** One line per person with the totals: ready for payroll / HR. */
+  function exportSummaryCsv() {
+    const header = [
+      "Name",
+      "Email",
+      "Working days",
+      "Present",
+      "Late",
+      "Absent",
+      "Excused",
+      "On leave",
+      "Holidays",
+      "Attendance rate",
+      "Score",
+    ];
+    const body = rows.map((r) => [
+      r.name,
+      r.email,
+      workingDays(r),
+      r.summary.present,
+      r.summary.late,
+      r.summary.absent,
+      r.summary.excused,
+      r.summary.leave,
+      r.summary.holiday,
+      r.rate == null ? "" : `${Math.round(r.rate * 100)}%`,
+      `${r.score}/${r.scoreBase}`,
+    ]);
+    download(toCsv([header, ...body]), `attendance-summary-${from}-to-${to}.csv`);
+  }
+
+  /** Opens a clean, printable summary; the browser's "Save as PDF" turns it into a PDF. */
+  function exportPdf() {
+    const win = window.open("", "_blank");
+    if (!win) return;
+    const range = `${formatDay(from, { weekday: undefined })} – ${formatDay(to, { weekday: undefined })}`;
+    const tr = rows
+      .map(
+        (r) => `<tr>
+          <td><strong>${escapeHtml(r.name)}</strong><br><span class="muted">${escapeHtml(r.email)}</span></td>
+          <td>${workingDays(r)}</td><td>${r.summary.present}</td><td>${r.summary.late}</td>
+          <td>${r.summary.absent}</td><td>${r.summary.leave}</td><td>${r.summary.holiday}</td>
+          <td>${r.rate == null ? "–" : Math.round(r.rate * 100) + "%"}</td>
+          <td><strong>${r.score}</strong>/${r.scoreBase}</td></tr>`,
+      )
+      .join("");
+    win.document.write(`<!doctype html><html><head><meta charset="utf-8">
+      <title>Attendance report ${from} to ${to}</title>
+      <style>
+        body{font:13px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1d1d1f;margin:32px}
+        h1{font-size:22px;margin:0 0 4px;letter-spacing:-.02em}
+        .muted{color:#6e6e73;font-size:11px}
+        table{width:100%;border-collapse:collapse;margin-top:20px}
+        th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6e6e73;text-align:left;padding:8px;border-bottom:1px solid #d2d2d7}
+        td{padding:8px;border-bottom:1px solid #ececf0;vertical-align:top}
+        tr:nth-child(even) td{background:#fafafc}
+        footer{margin-top:24px}
+      </style></head><body>
+      <h1>Attendance report</h1>
+      <div class="muted">${escapeHtml(range)} · ${rows.length} members · generated ${new Date().toLocaleString()}</div>
+      <table><thead><tr><th>Member</th><th>Working days</th><th>Present</th><th>Late</th><th>Absent</th><th>Leave</th><th>Holidays</th><th>Rate</th><th>Score</th></tr></thead>
+      <tbody>${tr}</tbody></table>
+      <footer class="muted">FaceVerse · Holidays and approved leave are never counted as absences.</footer>
+      <script>window.onload=()=>{window.print()}<\/script></body></html>`);
+    win.document.close();
+    play("success");
+  }
+
+  function download(csv: string, filename: string) {
+    const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `attendance-${from}-to-${to}.csv`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
     play("success");
@@ -130,9 +209,17 @@ export function AttendanceReport({
             <Filter aria-hidden /> Apply
           </Button>
         </form>
-        <Button className="ml-auto" onClick={exportCsv} disabled={rows.length === 0}>
-          <Download aria-hidden /> Export CSV
-        </Button>
+        <div className="ml-auto flex flex-wrap gap-2">
+          <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}>
+            <Download aria-hidden /> Daily CSV
+          </Button>
+          <Button variant="outline" onClick={exportSummaryCsv} disabled={rows.length === 0}>
+            <FileSpreadsheet aria-hidden /> Summary CSV
+          </Button>
+          <Button onClick={exportPdf} disabled={rows.length === 0}>
+            <FileText aria-hidden /> PDF report
+          </Button>
+        </div>
       </div>
 
       <ul className="flex flex-wrap gap-3 text-xs" aria-label="Legend">

@@ -414,3 +414,63 @@ export async function updateScoringRules(
     };
   });
 }
+
+const holidaySchema = z.object({
+  day: z.string().refine(isValidDay, "Pick a valid date."),
+  name: z.string().trim().min(1, "Give the holiday a name.").max(80),
+});
+
+/** Adds (or renames) a workspace holiday. Nobody is marked absent on it. */
+export async function saveHoliday(input: z.input<typeof holidaySchema>): Promise<ActionResult> {
+  const parsed = holidaySchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  const { day, name } = parsed.data;
+  return run("admin.holiday_save", null, async ({ admin, adminId }) => {
+    const { error } = await admin
+      .from("holidays")
+      .upsert({ day, name, created_by: adminId }, { onConflict: "day" });
+    if (error) throw error;
+    return { day, name };
+  });
+}
+
+export async function deleteHoliday(day: string): Promise<ActionResult> {
+  if (!isValidDay(day)) return { ok: false, error: "Invalid date." };
+  return run("admin.holiday_delete", null, async ({ admin }) => {
+    const { error } = await admin.from("holidays").delete().eq("day", day);
+    if (error) throw error;
+    return { day };
+  });
+}
+
+const geofenceSchema = z
+  .object({
+    enabled: z.boolean(),
+    lat: z.number().min(-90).max(90).nullable(),
+    lng: z.number().min(-180).max(180).nullable(),
+    radius: z.number().int().min(50, "Use at least 50 m.").max(5000, "Use at most 5 km."),
+  })
+  .refine((v) => !v.enabled || (v.lat !== null && v.lng !== null), {
+    message: "Set the office location before turning the check on.",
+  });
+
+/** Office location check for self check-in (the kiosk is exempt). */
+export async function updateGeofence(input: z.input<typeof geofenceSchema>): Promise<ActionResult> {
+  const parsed = geofenceSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  const { enabled, lat, lng, radius } = parsed.data;
+  return run("admin.update_geofence", null, async ({ admin }) => {
+    const { error } = await admin
+      .from("attendance_settings")
+      .update({
+        geofence_enabled: enabled,
+        office_lat: lat,
+        office_lng: lng,
+        office_radius_m: radius,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+    if (error) throw error;
+    return { enabled, radius };
+  });
+}

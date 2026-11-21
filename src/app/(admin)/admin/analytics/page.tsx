@@ -67,7 +67,9 @@ export default async function AnalyticsPage() {
   ]);
   const members = users.filter((u) => u.role === "member" && !u.disabled);
   const present = new Set((attendance ?? []).map((a) => `${a.user_id}:${a.day}`));
-  const workdays = eachDay(from, to).filter((d) => settings.work_days.includes(isoWeekday(d)));
+  const workdays = eachDay(from, to).filter(
+    (d) => settings.work_days.includes(isoWeekday(d)) && !settings.holidays[d],
+  );
 
   const perUser = new Map(members.map((m) => [m.id, { present: 0, expected: 0 }]));
   const perWeekday = new Map<number, { present: number; expected: number }>();

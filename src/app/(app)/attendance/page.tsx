@@ -86,6 +86,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
         today,
         joinedDay,
         workDays: settings.work_days,
+        holidays: settings.holidays,
         attendance: record,
         review,
         onLeave: leaveDays.has(day),
@@ -118,6 +119,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
         today,
         joinedDay,
         workDays: settings.work_days,
+        holidays: settings.holidays,
         attendance: presentRecent.has(day) ? { check_in_at: day } : null,
         review: reviewByDay.get(day) ?? null,
         onLeave: leaveDays.has(day),
@@ -168,6 +170,9 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
         userId={user.id}
       />
       <CheckInCard
+        requireLocation={
+          settings.geofence_enabled && settings.office_lat !== null && settings.office_lng !== null
+        }
         today={today}
         timezone={settings.timezone}
         record={

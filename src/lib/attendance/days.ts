@@ -10,6 +10,7 @@ export type DayStatus =
   | "absent"
   | "excused"
   | "leave"
+  | "holiday"
   | "pending"
   | "off"
   | "today"
@@ -22,6 +23,7 @@ export const dayStatusLabels: Record<DayStatus, string> = {
   absent: "Absent",
   excused: "Excused",
   leave: "On leave",
+  holiday: "Holiday",
   pending: "Reason pending",
   off: "Day off",
   today: "Not checked in yet",
@@ -36,6 +38,7 @@ export const dayStatusCodes: Record<DayStatus, string> = {
   absent: "A",
   excused: "E",
   leave: "L",
+  holiday: "H",
   pending: "?",
   off: "-",
   today: "·",
@@ -110,6 +113,7 @@ export function dayStatus({
   review,
   onLeave = false,
   late = false,
+  holidays,
 }: {
   day: string;
   today: string;
@@ -122,10 +126,13 @@ export function dayStatus({
   onLeave?: boolean;
   /** Checked in after the office start + grace. An approved late reason counts as present. */
   late?: boolean;
+  /** Workspace holidays (day → name). A holiday is never an absence. */
+  holidays?: Readonly<Record<string, string>>;
 }): DayStatus {
   if (attendance) return late && review?.status !== "approved" ? "late" : "present";
   const workday = workDays.includes(isoWeekday(day));
   if (onLeave && workday && day >= joinedDay) return "leave";
+  if (holidays?.[day] && workday && day >= joinedDay) return "holiday";
   if (day > today) return "upcoming";
   if (day < joinedDay) return "untracked";
   if (!workday) return "off";
@@ -175,7 +182,8 @@ export function currentStreak(statusesNewestFirst: readonly DayStatus[]): number
   let streak = 0;
   for (const s of statusesNewestFirst) {
     if (s === "present" || s === "late") streak++;
-    else if (s === "off" || s === "today" || s === "upcoming" || s === "leave") continue;
+    else if (s === "off" || s === "today" || s === "upcoming" || s === "leave" || s === "holiday")
+      continue;
     else break;
   }
   return streak;
@@ -193,4 +201,15 @@ export function toCsv(rows: readonly (readonly (string | number | null | undefin
         .join(","),
     )
     .join("\r\n");
+}
+
+/** Longest run of attended working days (days off, leave and holidays don't break it). */
+export function bestStreak(statusesOldestFirst: readonly DayStatus[]): number {
+  let best = 0;
+  let run = 0;
+  for (const s of statusesOldestFirst) {
+    if (s === "present" || s === "late") best = Math.max(best, ++run);
+    else if (s === "absent" || s === "excused" || s === "pending") run = 0;
+  }
+  return best;
 }

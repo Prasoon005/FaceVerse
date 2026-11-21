@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 
 import { Providers } from "@/components/providers";
 import { siteConfig } from "@/config/site";
+import { accentBootScript } from "@/lib/ui/accent";
 
 import "./globals.css";
 
@@ -18,6 +19,11 @@ export const metadata: Metadata = {
   title: { default: siteConfig.name, template: `%s · ${siteConfig.name}` },
   description: siteConfig.description,
   authors: [{ name: siteConfig.author.name, url: siteConfig.author.github }],
+  icons: {
+    icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  appleWebApp: { capable: true, title: "FaceVerse", statusBarStyle: "black-translucent" },
   openGraph: {
     title: siteConfig.name,
     description: siteConfig.description,
@@ -42,6 +48,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geist.variable} ${geistMono.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Applies the saved accent colour before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: accentBootScript }} />
+      </head>
       <body className="min-h-full">
         <Providers>{children}</Providers>
       </body>

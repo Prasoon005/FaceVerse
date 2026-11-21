@@ -110,6 +110,7 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
         today,
         joinedDay,
         workDays: settings.work_days,
+        holidays: settings.holidays,
         attendance: record,
         review,
         onLeave: leaveDays.has(day),

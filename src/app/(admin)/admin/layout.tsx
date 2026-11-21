@@ -4,6 +4,7 @@ import { AccountDisabled } from "@/components/layout/account-disabled";
 import { AppShell } from "@/components/layout/app-shell";
 import type { ShellUser } from "@/components/layout/user-menu";
 import { getViewer } from "@/lib/admin/server";
+import { resolveAvatar } from "@/lib/avatars";
 
 /**
  * The admin console: its own shell, navigation and accent colour. Signed-out visitors go to
@@ -12,7 +13,7 @@ import { getViewer } from "@/lib/admin/server";
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const viewer = await getViewer();
   if (!viewer) redirect("/admin/login");
-  const { user, profile } = viewer;
+  const { user, profile, supabase } = viewer;
 
   if (profile?.disabled) return <AccountDisabled email={user.email ?? ""} />;
   if (profile?.role !== "admin") notFound();
@@ -20,7 +21,9 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const shellUser: ShellUser = {
     email: user.email ?? "",
     fullName: profile.full_name ?? (user.user_metadata.full_name as string | undefined) ?? null,
-    avatarUrl: profile.avatar_url ?? null,
+    avatarUrl:
+      (await resolveAvatar(supabase, profile.avatar_url)) ??
+      ((user.user_metadata.avatar_url as string | undefined) || null),
     role: "admin",
   };
 

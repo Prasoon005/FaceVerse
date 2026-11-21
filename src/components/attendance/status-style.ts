@@ -6,6 +6,7 @@ import {
   CircleDashed,
   CircleHelp,
   CircleX,
+  PartyPopper,
   Clock,
   type LucideIcon,
   Plane,
@@ -40,6 +41,11 @@ export const statusStyle: Record<DayStatus, { cell: string; dot: string; icon: L
     cell: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30",
     dot: "bg-sky-500",
     icon: Plane,
+  },
+  holiday: {
+    cell: "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30",
+    dot: "bg-violet-500",
+    icon: PartyPopper,
   },
   pending: {
     cell: "bg-warning/15 text-warning-foreground border-warning/30",

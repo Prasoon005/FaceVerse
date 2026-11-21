@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { recognitionConfig } from "@/config/recognition";
-import { getViewer } from "@/lib/admin/server";
+import { getAttendanceSettings, getViewer } from "@/lib/admin/server";
 import { normalize, toPgVector } from "@/lib/ai/vector";
+import { distanceMetres } from "@/lib/attendance/geo";
 import { markAttendance } from "@/lib/attendance/mark";
 import { createAdminClient, isAdminConfigured } from "@/lib/supabase/admin";
 
@@ -12,6 +13,14 @@ const schema = z.object({
     .array(z.number().refine(Number.isFinite))
     .length(recognitionConfig.face.embeddingSize),
   livenessPassed: z.literal(true),
+  /** Required when the workspace has the office location check on. */
+  location: z
+    .object({
+      lat: z.number().min(-90).max(90),
+      lng: z.number().min(-180).max(180),
+      accuracy: z.number().min(0).max(100000),
+    })
+    .optional(),
 });
 
 export type AttendanceResponse =
@@ -19,9 +28,20 @@ export type AttendanceResponse =
   | {
       ok: false;
       error:
-        "invalid" | "unauthenticated" | "not_enrolled" | "pending" | "face" | "done" | "server";
+        | "invalid"
+        | "unauthenticated"
+        | "not_enrolled"
+        | "pending"
+        | "face"
+        | "location"
+        | "done"
+        | "server";
       message: string;
     };
+
+function formatDistance(m: number) {
+  return m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`;
+}
 
 function reply(body: AttendanceResponse, status: number) {
   return NextResponse.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -47,6 +67,34 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const userId = viewer.user.id;
+
+  // Office location check (self check-in only; the kiosk has its own route).
+  const settings = await getAttendanceSettings(admin);
+  if (settings.geofence_enabled && settings.office_lat !== null && settings.office_lng !== null) {
+    const loc = parsed.data.location;
+    if (!loc) {
+      return reply(
+        {
+          ok: false,
+          error: "location",
+          message: "Allow location access: attendance can only be marked at the office.",
+        },
+        403,
+      );
+    }
+    const distance = distanceMetres(loc, { lat: settings.office_lat, lng: settings.office_lng });
+    // Give back up to 150 m of GPS uncertainty so a weak fix indoors isn't rejected.
+    if (distance > settings.office_radius_m + Math.min(loc.accuracy, 150)) {
+      return reply(
+        {
+          ok: false,
+          error: "location",
+          message: `You're about ${formatDistance(distance)} from the office. Mark attendance when you're there.`,
+        },
+        403,
+      );
+    }
+  }
 
   const { data: linked } = await admin
     .from("people")

@@ -279,6 +279,122 @@ html.dark[data-portal="admin"] {
   --orb-3: rgb(255 55 95 / 0.08);
 }
 
+/* Accent colours the user can pick in Settings → Appearance (user portal only). */
+html[data-accent="purple"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="purple"]:not([data-portal="admin"]) body {
+  --brand: #8944ab;
+  --primary: #8944ab;
+  --ring: #8944ab;
+  --sidebar-primary: #8944ab;
+  --sidebar-ring: #8944ab;
+  --chart-1: #8944ab;
+  --orb-1: rgb(175 82 222 / 0.16);
+  --orb-2: rgb(88 86 214 / 0.14);
+}
+html.dark[data-accent="purple"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="purple"]:not([data-portal="admin"]) body {
+  --brand: #bf5af2;
+  --primary: #8944ab;
+  --ring: #bf5af2;
+  --chart-1: #bf5af2;
+  --orb-1: rgb(191 90 242 / 0.26);
+}
+html[data-accent="teal"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="teal"]:not([data-portal="admin"]) body {
+  --brand: #0e7c86;
+  --primary: #0e7c86;
+  --ring: #0e7c86;
+  --sidebar-primary: #0e7c86;
+  --sidebar-ring: #0e7c86;
+  --chart-1: #0e7c86;
+  --orb-1: rgb(48 176 199 / 0.18);
+  --orb-2: rgb(52 199 89 / 0.1);
+}
+html.dark[data-accent="teal"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="teal"]:not([data-portal="admin"]) body {
+  --brand: #40c8e0;
+  --primary: #0e7c86;
+  --ring: #40c8e0;
+  --chart-1: #40c8e0;
+  --orb-1: rgb(64 200 224 / 0.24);
+}
+html[data-accent="green"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="green"]:not([data-portal="admin"]) body {
+  --brand: #1f7a34;
+  --primary: #1f7a34;
+  --ring: #1f7a34;
+  --sidebar-primary: #1f7a34;
+  --sidebar-ring: #1f7a34;
+  --chart-1: #1f7a34;
+  --orb-1: rgb(52 199 89 / 0.16);
+  --orb-2: rgb(48 176 199 / 0.12);
+}
+html.dark[data-accent="green"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="green"]:not([data-portal="admin"]) body {
+  --brand: #30d158;
+  --primary: #1f7a34;
+  --ring: #30d158;
+  --chart-1: #30d158;
+  --orb-1: rgb(48 209 88 / 0.22);
+}
+html[data-accent="pink"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="pink"]:not([data-portal="admin"]) body {
+  --brand: #d6194b;
+  --primary: #d6194b;
+  --ring: #d6194b;
+  --sidebar-primary: #d6194b;
+  --sidebar-ring: #d6194b;
+  --chart-1: #d6194b;
+  --orb-1: rgb(255 45 85 / 0.14);
+  --orb-2: rgb(175 82 222 / 0.12);
+}
+html.dark[data-accent="pink"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="pink"]:not([data-portal="admin"]) body {
+  --brand: #ff375f;
+  --primary: #d6194b;
+  --ring: #ff375f;
+  --chart-1: #ff375f;
+  --orb-1: rgb(255 55 95 / 0.22);
+}
+html[data-accent="orange"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="orange"]:not([data-portal="admin"]) body {
+  --brand: #c45500;
+  --primary: #c45500;
+  --ring: #c45500;
+  --sidebar-primary: #c45500;
+  --sidebar-ring: #c45500;
+  --chart-1: #c45500;
+  --orb-1: rgb(255 149 0 / 0.16);
+  --orb-2: rgb(255 59 48 / 0.1);
+}
+html.dark[data-accent="orange"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="orange"]:not([data-portal="admin"]) body {
+  --brand: #ff9f0a;
+  --primary: #c45500;
+  --ring: #ff9f0a;
+  --chart-1: #ff9f0a;
+  --orb-1: rgb(255 159 10 / 0.22);
+}
+html[data-accent="graphite"]:not([data-portal="admin"]) [data-portal="user"],
+html[data-accent="graphite"]:not([data-portal="admin"]) body {
+  --brand: #3a3a3c;
+  --primary: #3a3a3c;
+  --ring: #3a3a3c;
+  --sidebar-primary: #3a3a3c;
+  --sidebar-ring: #3a3a3c;
+  --chart-1: #3a3a3c;
+  --orb-1: rgb(142 142 147 / 0.18);
+  --orb-2: rgb(99 99 102 / 0.12);
+}
+html.dark[data-accent="graphite"]:not([data-portal="admin"]) [data-portal="user"],
+html.dark[data-accent="graphite"]:not([data-portal="admin"]) body {
+  --brand: #c7c7cc;
+  --primary: #636366;
+  --ring: #c7c7cc;
+  --chart-1: #c7c7cc;
+  --orb-1: rgb(174 174 178 / 0.16);
+}
+
 /* ---------- Glass surfaces ---------- */
 @layer components {
   /* Frosted panel: translucent fill, blur, soft shadow and a light-catching gradient edge. */
@@ -353,6 +469,12 @@ html.dark[data-portal="admin"] {
   text-shadow: 0 0 24px color-mix(in oklab, var(--brand) 55%, transparent);
 }
 
+/* Chart lines and bars glow softly in dark mode. */
+.dark .chart-glow .recharts-area-curve,
+.dark .chart-glow .recharts-bar-rectangle {
+  filter: drop-shadow(0 0 8px color-mix(in oklab, var(--chart-1) 55%, transparent));
+}
+
 /* Selected item in the sidebar / bottom bar / tabs. */
 .nav-pill,
 [data-slot="tabs-list"][data-variant="default"]
@@ -371,6 +493,37 @@ html.dark[data-portal="admin"] {
     inset 0 1px 0 rgb(255 255 255 / 0.1),
     0 0 0 0.5px rgb(255 255 255 / 0.08),
     0 0 26px -8px color-mix(in oklab, var(--brand) 70%, transparent);
+}
+
+/* Splash: logo pops in, then the whole screen fades away. */
+.splash {
+  animation: splash-out 1s var(--ease-out-soft) forwards;
+}
+.splash-logo {
+  animation: splash-in 0.6s var(--ease-out-soft) both;
+}
+@keyframes splash-out {
+  0%,
+  55% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@keyframes splash-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
 }
 
 /* Press feedback: buttons give a little when pressed. */

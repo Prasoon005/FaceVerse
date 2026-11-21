@@ -3,6 +3,7 @@
  * requireAdminPage(): it uses the service-role client.
  */
 import type { createAdminClient } from "@/lib/supabase/admin";
+import { resolveAvatars } from "@/lib/avatars";
 import { leaveDaySet } from "@/lib/attendance/days";
 import type { ApprovalStatus } from "@/types/database";
 
@@ -19,13 +20,17 @@ export type WorkspaceUser = {
   peopleCount: number;
   /** Status of the user's own (account-linked) face enrollment. */
   enrollment: ApprovalStatus | "none";
+  /** Displayable photo URL (signed for uploaded photos), or null. */
+  avatarUrl: string | null;
+  phone: string | null;
+  department: string | null;
 };
 
 /** Every account with profile details, enrollment status and how many people they enrolled. */
 export async function listWorkspaceUsers(admin: Admin): Promise<WorkspaceUser[]> {
   const [{ data: authData, error }, profiles, people] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-    admin.from("profiles").select("id, full_name, role, disabled, created_at"),
+    admin.from("profiles").select("*"),
     admin.from("people").select("owner_id, linked_user_id, approval_status"),
   ]);
   if (error) throw error;
@@ -43,6 +48,11 @@ export async function listWorkspaceUsers(admin: Admin): Promise<WorkspaceUser[]>
       }
     }
   }
+
+  const avatars = await resolveAvatars(
+    admin,
+    (profiles.data ?? []).map((p) => p.avatar_url),
+  );
 
   return authData.users
     .map((u) => {
@@ -62,6 +72,11 @@ export async function listWorkspaceUsers(admin: Admin): Promise<WorkspaceUser[]>
         lastSignInAt: u.last_sign_in_at ?? null,
         peopleCount: counts.get(u.id) ?? 0,
         enrollment: enrollment.get(u.id) ?? "none",
+        avatarUrl:
+          (profile?.avatar_url ? avatars.get(profile.avatar_url) : undefined) ??
+          ((u.user_metadata?.avatar_url as string | undefined) || null),
+        phone: profile?.phone ?? null,
+        department: profile?.department ?? null,
       } satisfies WorkspaceUser;
     })
     .sort((a, b) => a.name.localeCompare(b.name));

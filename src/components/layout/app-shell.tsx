@@ -5,11 +5,14 @@ import type { Portal } from "@/config/site";
 
 import { AnnouncementPopup } from "./announcement-popup";
 import { CommandMenu } from "./command-menu";
+import { InstallApp } from "./install-app";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { PortalAttribute } from "./portal-attribute";
+import { SplashScreen } from "./splash-screen";
 import { MobileSidebar, Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
 import type { ShellUser } from "./user-menu";
+import { WelcomeTour } from "./welcome-tour";
 
 /**
  * Sidebar + topbar frame. The user app and the admin console share it, with their own
@@ -46,7 +49,14 @@ export function AppShell({
       </div>
       <MobileBottomNav portal={portal} />
       <CommandMenu portal={portal} />
-      {portal === "user" ? <AnnouncementPopup /> : null}
+      {portal === "user" ? (
+        <>
+          <AnnouncementPopup />
+          <WelcomeTour />
+          <InstallApp />
+        </>
+      ) : null}
+      <SplashScreen />
       <PortalAttribute portal={portal} />
     </div>
   );

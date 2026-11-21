@@ -19,11 +19,13 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { Stagger, StaggerItem, StaggerList, StaggerListItem } from "@/components/shared/motion";
 import { PageHeader } from "@/components/shared/page-header";
 import { StatCard } from "@/components/shared/stat-card";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { listWorkspaceUsers, loadApprovedLeave } from "@/lib/admin/data";
 import { getAttendanceSettings, requireAdminPage } from "@/lib/admin/server";
 import { addDays, isoWeekday, localDay } from "@/lib/attendance/days";
+import { lateMinutes } from "@/lib/attendance/score";
 import { formatDay, formatTimeIn } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -49,7 +51,8 @@ export default async function AdminOverviewPage() {
   const { admin, adminId } = await requireAdminPage();
   const settings = await getAttendanceSettings(admin);
   const today = localDay(new Date(), settings.timezone);
-  const isWorkday = (day: string) => settings.work_days.includes(isoWeekday(day));
+  const isWorkday = (day: string) =>
+    settings.work_days.includes(isoWeekday(day)) && !settings.holidays[day];
 
   // The most recent working day before today (for "who was absent").
   let lastWorkday = addDays(today, -1);
@@ -90,6 +93,7 @@ export default async function AdminOverviewPage() {
 
   const active = users.filter((u) => !u.disabled);
   const nameById = new Map(users.map((u) => [u.id, u.name]));
+  const avatarById = new Map(users.map((u) => [u.id, u.avatarUrl]));
   const checkedIn = todayRows.data ?? [];
   const presentLast = new Set((lastRows.data ?? []).map((r) => r.user_id));
   const reviewFor = new Map(
@@ -224,7 +228,12 @@ export default async function AdminOverviewPage() {
                       key={r.user_id}
                       className="flex items-center gap-3 py-2.5 text-sm"
                     >
-                      <span className="size-2 rounded-full bg-success" aria-hidden />
+                      <UserAvatar
+                        name={nameById.get(r.user_id) ?? "?"}
+                        src={avatarById.get(r.user_id)}
+                        status={lateMinutes(r.check_in_at, settings) > 0 ? "late" : "present"}
+                        size="sm"
+                      />
                       <span className="font-medium">
                         {nameById.get(r.user_id) ?? "Unknown user"}
                       </span>

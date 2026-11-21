@@ -14,11 +14,11 @@ import {
   UserX,
   XCircle,
 } from "lucide-react";
-import Link from "next/link";
 import { useState } from "react";
 
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
+import { UserAvatar } from "@/components/shared/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,11 +44,12 @@ import {
   setUserDisabled,
   setUserRole,
 } from "@/lib/actions/admin";
-import type { WorkspaceUser } from "@/lib/admin/data";
 import { formatPercent, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-type Row = WorkspaceUser & { monthRate: number | null; monthAbsent: number };
+import { type DrawerUser, UserDrawer } from "./user-drawer";
+
+type Row = DrawerUser & { monthAbsent: number };
 
 const enrollmentBadge = {
   approved: { label: "Face approved", icon: CircleCheck, className: "text-success-foreground" },
@@ -63,6 +64,8 @@ export function UsersTable({ users, currentUserId }: { users: Row[]; currentUser
   const { run, busyKey } = useServerAction();
   const [query, setQuery] = useState("");
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const openUser = users.find((u) => u.id === openId) ?? null;
   const q = query.trim().toLowerCase();
   const filtered = q
     ? users.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
@@ -87,7 +90,7 @@ export function UsersTable({ users, currentUserId }: { users: Row[]; currentUser
       {filtered.length === 0 ? (
         <EmptyState title="No users found" description="Try a different search." />
       ) : (
-        <div className="overflow-x-auto rounded-xl border">
+        <div className="glass-panel overflow-x-auto rounded-[22px]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -118,18 +121,25 @@ export function UsersTable({ users, currentUserId }: { users: Row[]; currentUser
                     )}
                   >
                     <TableCell>
-                      <div className="grid">
-                        <Link
-                          href={`/admin/users/${u.id}`}
-                          className="font-medium underline-offset-4 hover:text-brand hover:underline"
-                        >
-                          {u.name}{" "}
-                          {self ? (
-                            <span className="text-xs text-muted-foreground">(you)</span>
-                          ) : null}
-                        </Link>
-                        <span className="text-xs text-muted-foreground">{u.email}</span>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setOpenId(u.id)}
+                        className="flex items-center gap-3 rounded-xl text-left"
+                      >
+                        <UserAvatar name={u.name} src={u.avatarUrl} status={u.today} size="md" />
+                        <span className="grid">
+                          <span className="font-medium underline-offset-4 hover:text-brand hover:underline">
+                            {u.name}{" "}
+                            {self ? (
+                              <span className="text-xs text-muted-foreground">(you)</span>
+                            ) : null}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {u.department ? `${u.department} · ` : ""}
+                            {u.email}
+                          </span>
+                        </span>
+                      </button>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
@@ -274,6 +284,7 @@ export function UsersTable({ users, currentUserId }: { users: Row[]; currentUser
           );
         }}
       />
+      <UserDrawer user={openUser} onOpenChange={(o) => !o && setOpenId(null)} />
     </div>
   );
 }

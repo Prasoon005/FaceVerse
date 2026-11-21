@@ -33,6 +33,21 @@ import type { AttendanceResponse } from "@/app/api/attendance/route";
 
 type Enrollment = "none" | "pending" | "approved" | "rejected";
 
+function currentPosition(): Promise<{ lat: number; lng: number; accuracy: number }> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("unsupported"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (p) =>
+        resolve({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
+      reject,
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+    );
+  });
+}
+
 type Phase =
   | { kind: "scan" }
   | { kind: "saving" }
@@ -46,7 +61,10 @@ export function CheckInCard({
   record,
   enrollment,
   reviewNote,
+  requireLocation = false,
 }: {
+  /** The office location check is on: send the phone's position with the scan. */
+  requireLocation?: boolean;
   today: string;
   timezone: string;
   record: { checkInAt: string; checkOutAt: string | null } | null;
@@ -65,10 +83,29 @@ export function CheckInCard({
   async function submit(embedding: Float32Array) {
     setPhase({ kind: "saving" });
     try {
+      let location: { lat: number; lng: number; accuracy: number } | undefined;
+      if (requireLocation) {
+        try {
+          location = await currentPosition();
+        } catch {
+          play("error");
+          setPhase({
+            kind: "error",
+            message:
+              "Couldn't read your location. Allow location access for this site and try again at the office.",
+            faceTips: false,
+          });
+          return;
+        }
+      }
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ faceEmbedding: Array.from(embedding), livenessPassed: true }),
+        body: JSON.stringify({
+          faceEmbedding: Array.from(embedding),
+          livenessPassed: true,
+          location,
+        }),
       });
       const body = (await res.json()) as AttendanceResponse;
       if (body.ok) {

@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { RecognitionsChart } from "@/components/charts/recognitions-chart";
 import { LiveUpdates } from "@/components/admin/live-updates";
+import { AttendanceHeatmap } from "@/components/dashboard/attendance-heatmap";
 import { WelcomeHero } from "@/components/dashboard/welcome-hero";
 import { ConfidenceRing } from "@/components/shared/confidence-ring";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -64,6 +65,7 @@ export default async function DashboardPage() {
   return (
     <div className="grid gap-6">
       <WelcomeHero />
+      <AttendanceHeatmap />
       <PageHeader
         title="Recognition overview"
         description="Overview of enrolments, recognitions and visitors."

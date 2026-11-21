@@ -20,13 +20,25 @@ export type WorkspaceSettings = Pick<
   | "deduct_late"
   | "deduct_excused"
   | "deduct_late_excused"
->;
+  | "geofence_enabled"
+  | "office_lat"
+  | "office_lng"
+  | "office_radius_m"
+> & {
+  /** Workspace holidays: day ("YYYY-MM-DD") → name. */
+  holidays: Record<string, string>;
+};
 
 export const DEFAULT_SETTINGS: WorkspaceSettings = {
   work_days: [1, 2, 3, 4, 5, 6],
   timezone: "Asia/Kolkata",
   ...DEFAULT_OFFICE,
   ...DEFAULT_RULES,
+  geofence_enabled: false,
+  office_lat: null,
+  office_lng: null,
+  office_radius_m: 200,
+  holidays: {},
 };
 
 /** The signed-in user and their profile, or null when signed out. */
@@ -38,7 +50,7 @@ export async function getViewer() {
   if (!user) return null;
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, disabled, full_name, avatar_url, created_at")
+    .select("*")
     .eq("id", user.id)
     .maybeSingle();
   return { supabase, user, profile };
@@ -78,8 +90,13 @@ export async function requireMember() {
 export async function getAttendanceSettings(
   client: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
 ): Promise<WorkspaceSettings> {
-  const { data } = await client.from("attendance_settings").select("*").eq("id", 1).maybeSingle();
-  if (!data) return DEFAULT_SETTINGS;
+  const [{ data }, { data: holidayRows }] = await Promise.all([
+    client.from("attendance_settings").select("*").eq("id", 1).maybeSingle(),
+    // Missing table (migration 0011 not run yet) just means no holidays.
+    client.from("holidays").select("day, name"),
+  ]);
+  const holidays = Object.fromEntries((holidayRows ?? []).map((h) => [h.day, h.name]));
+  if (!data) return { ...DEFAULT_SETTINGS, holidays };
   // Columns from newer migrations may be missing on an older database: fall back to defaults.
   const num = (v: unknown, fallback: number) =>
     v === null || v === undefined ? fallback : Number(v);
@@ -93,5 +110,10 @@ export async function getAttendanceSettings(
     deduct_late: num(data.deduct_late, DEFAULT_SETTINGS.deduct_late),
     deduct_excused: num(data.deduct_excused, DEFAULT_SETTINGS.deduct_excused),
     deduct_late_excused: num(data.deduct_late_excused, DEFAULT_SETTINGS.deduct_late_excused),
+    geofence_enabled: Boolean(data.geofence_enabled),
+    office_lat: data.office_lat ?? null,
+    office_lng: data.office_lng ?? null,
+    office_radius_m: num(data.office_radius_m, DEFAULT_SETTINGS.office_radius_m),
+    holidays,
   };
 }

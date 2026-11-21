@@ -1,6 +1,6 @@
 "use client";
 
-import { Fingerprint, LogOut, Settings, ShieldCheck } from "lucide-react";
+import { Fingerprint, LogOut, Settings, ShieldCheck, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -46,7 +46,7 @@ export function UserMenu({ user, portal = "user" }: { user: ShellUser; portal?: 
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full" aria-label="Open user menu">
-          <Avatar className="size-7">
+          <Avatar className="size-7 ring-2 ring-brand/30">
             {user.avatarUrl ? <AvatarImage src={user.avatarUrl} alt="" /> : null}
             <AvatarFallback className="bg-brand/15 text-xs text-brand">
               {initials(displayName)}
@@ -65,6 +65,11 @@ export function UserMenu({ user, portal = "user" }: { user: ShellUser; portal?: 
           ) : null}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href={portal === "admin" ? "/admin/profile" : "/profile"}>
+            <UserRound aria-hidden /> Profile
+          </Link>
+        </DropdownMenuItem>
         {portal === "admin" ? (
           <DropdownMenuItem asChild>
             <Link href="/admin/settings">

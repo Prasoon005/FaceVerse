@@ -69,6 +69,7 @@ export default async function AdminAttendancePage({
           today,
           joinedDay,
           workDays: settings.work_days,
+          holidays: settings.holidays,
           attendance: record,
           review,
           onLeave: leave.get(u.id)?.has(day) ?? false,

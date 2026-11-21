@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { AccountDisabled } from "@/components/layout/account-disabled";
 import type { ShellUser } from "@/components/layout/user-menu";
+import { resolveAvatar } from "@/lib/avatars";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -32,7 +33,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const shellUser: ShellUser = {
     email: user.email ?? "",
     fullName: profile?.full_name ?? (user.user_metadata.full_name as string | undefined) ?? null,
-    avatarUrl: profile?.avatar_url ?? null,
+    avatarUrl:
+      (await resolveAvatar(supabase, profile?.avatar_url)) ??
+      ((user.user_metadata.avatar_url as string | undefined) || null),
     role: profile?.role ?? "member",
   };
 

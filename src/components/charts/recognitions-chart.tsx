@@ -11,6 +11,7 @@ import {
 } from "recharts";
 
 import type { DailyPoint } from "@/lib/data/dashboard";
+import { areaCursor, glassTooltip, gridProps, tooltipLabelStyle } from "@/lib/ui/chart-theme";
 
 const dayLabel = (iso: string) =>
   new Intl.DateTimeFormat("en", { month: "short", day: "numeric", timeZone: "UTC" }).format(
@@ -24,7 +25,7 @@ export function RecognitionsChart({ data }: { data: DailyPoint[] }) {
   return (
     <figure className="grid gap-3">
       <div
-        className="h-64 w-full"
+        className="chart-glow h-64 w-full"
         role="img"
         aria-label={`Area chart of recognitions over the last ${data.length} days, ${total} in total.`}
       >
@@ -40,7 +41,7 @@ export function RecognitionsChart({ data }: { data: DailyPoint[] }) {
                 <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid vertical={false} stroke="var(--border)" />
+            <CartesianGrid {...gridProps} />
             <XAxis
               dataKey="date"
               tickFormatter={dayLabel}
@@ -59,13 +60,9 @@ export function RecognitionsChart({ data }: { data: DailyPoint[] }) {
             />
             <Tooltip
               labelFormatter={(v) => dayLabel(String(v))}
-              contentStyle={{
-                background: "var(--popover)",
-                border: "1px solid var(--border)",
-                borderRadius: 8,
-                fontSize: 12,
-                color: "var(--popover-foreground)",
-              }}
+              cursor={areaCursor}
+              contentStyle={glassTooltip}
+              labelStyle={tooltipLabelStyle}
             />
             <Area
               type="monotone"

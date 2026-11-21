@@ -1,7 +1,8 @@
-import { ChevronRight, ShieldCheck, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, ShieldCheck, SlidersHorizontal, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { AppearanceCard } from "@/components/settings/appearance-card";
 import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 
@@ -14,6 +15,12 @@ const sections: {
   icon: typeof ShieldCheck;
   comingInPhase?: number;
 }[] = [
+  {
+    title: "Profile",
+    description: "Your photo, name, phone and department.",
+    href: "/profile",
+    icon: UserRound,
+  },
   {
     title: "Security",
     description: "Biometric login (face + voice) and recent sign-in attempts.",
@@ -32,12 +39,13 @@ export default function SettingsPage() {
   return (
     <div className="grid max-w-3xl gap-6">
       <PageHeader title="Settings" description="Profile, appearance, security and privacy." />
+      <AppearanceCard />
       <ul className="grid gap-3">
         {sections.map((section) => {
           const Icon = section.icon;
           const content = (
             <>
-              <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-brand/10 text-brand">
+              <span className="icon-glow grid size-10 shrink-0 place-items-center rounded-xl bg-brand/12 text-brand">
                 <Icon className="size-5" aria-hidden />
               </span>
               <span className="grid flex-1 gap-0.5">
@@ -56,7 +64,7 @@ export default function SettingsPage() {
               {section.href ? (
                 <Link
                   href={section.href}
-                  className="flex items-center gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+                  className="glass-panel hover-lift flex items-center gap-4 rounded-[20px] p-4"
                 >
                   {content}
                 </Link>
