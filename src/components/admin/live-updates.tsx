@@ -65,7 +65,7 @@ export function LiveUpdates({
         <span
           className={cn(
             "relative inline-flex size-2 rounded-full",
-            connected ? "bg-success" : "bg-muted-foreground",
+            connected ? "dot-glow bg-success text-success" : "bg-muted-foreground",
           )}
         />
       </span>

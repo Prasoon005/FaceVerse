@@ -31,12 +31,14 @@ export function StatCard({
     <Card className="hover-lift h-full gap-4 px-5 py-5">
       <div className="flex items-start justify-between gap-3">
         <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
-        <span className={cn("grid size-9 place-items-center rounded-xl", toneClasses[tone])}>
+        <span
+          className={cn("icon-glow grid size-10 place-items-center rounded-2xl", toneClasses[tone])}
+        >
           <Icon className="size-[18px]" aria-hidden />
         </span>
       </div>
       <div className="grid gap-1">
-        <div className="text-[30px] leading-none font-semibold tracking-tight tabular-nums">
+        <div className="text-[32px] leading-none font-semibold tracking-[-0.03em] tabular-nums">
           {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
         </div>
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}

@@ -133,7 +133,7 @@ export function ActivityTicker({
         <CardTitle className="flex items-center gap-2">
           <span className="relative flex size-2">
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-75" />
-            <span className="relative inline-flex size-2 rounded-full bg-success" />
+            <span className="dot-glow relative inline-flex size-2 rounded-full bg-success text-success" />
           </span>
           Live activity
         </CardTitle>
@@ -160,7 +160,7 @@ export function ActivityTicker({
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-foreground/5"
                   >
-                    <span className={cn("grid size-8 place-items-center rounded-lg", m.tone)}>
+                    <span className={cn("grid size-9 place-items-center rounded-xl", m.tone)}>
                       <m.icon className="size-4" aria-hidden />
                     </span>
                     <span className="min-w-0 flex-1 truncate">

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { AppBackdrop } from "@/components/fx/app-backdrop";
 import { HeroMesh } from "@/components/marketing/hero-mesh";
 import { ProductPreview } from "@/components/marketing/product-preview";
 import { Reveal } from "@/components/marketing/reveal";
@@ -121,10 +122,7 @@ const faqs = [
 export default function LandingPage() {
   return (
     <div className="relative isolate flex min-h-dvh flex-col">
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 -z-10 [background:var(--backdrop)]"
-      />
+      <AppBackdrop />
       <SiteHeader />
 
       <main className="flex-1">
@@ -132,15 +130,17 @@ export default function LandingPage() {
         <section className="relative">
           <div className="mx-auto grid max-w-6xl justify-items-center gap-7 px-5 pt-16 pb-14 text-center sm:px-6 md:pt-24">
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-(--shadow-card) backdrop-blur">
-                <span className="size-1.5 rounded-full bg-success" />
+              <span className="glass-panel inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
+                <span className="dot-glow size-1.5 rounded-full bg-success text-success" />
                 Face, voice and attendance in one private workspace
               </span>
             </Reveal>
             <Reveal delay={0.05}>
               <h1 className="mx-auto max-w-4xl text-[40px] leading-[1.05] font-semibold tracking-[-0.035em] sm:text-[56px] md:text-[68px]">
                 Recognition that respects
-                <span className="block text-muted-foreground">the person in front of it.</span>
+                <span className="block bg-gradient-to-b from-foreground/70 to-foreground/35 bg-clip-text text-transparent">
+                  the person in front of it.
+                </span>
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
@@ -166,13 +166,18 @@ export default function LandingPage() {
             </Reveal>
           </div>
 
-          <Reveal delay={0.2} className="mx-auto max-w-5xl px-5 pb-20 sm:px-6">
+          <Reveal delay={0.2} className="relative mx-auto max-w-5xl px-5 pb-20 sm:px-6">
+            {/* Light pooling under the preview (strongest in dark mode). */}
+            <div
+              aria-hidden
+              className="absolute inset-x-[10%] top-[10%] bottom-[20%] -z-10 rounded-full bg-brand/20 blur-[90px] dark:bg-brand/35"
+            />
             <ProductPreview />
           </Reveal>
         </section>
 
         {/* Highlights */}
-        <section className="border-y bg-card/40">
+        <section className="glass-panel border-y-0">
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-px px-5 sm:px-6 lg:grid-cols-4">
             {highlights.map((h, i) => (
               <Reveal key={h.label} delay={i * 0.05} className="grid gap-1 px-2 py-8 text-center">
@@ -260,9 +265,9 @@ export default function LandingPage() {
               />
               {steps.map((s, i) => (
                 <Reveal key={s.title} delay={i * 0.08}>
-                  <div className="relative grid h-full gap-3 rounded-[22px] bg-card p-7 shadow-(--shadow-card) backdrop-blur-(--glass-blur)">
+                  <div className="glass-panel grid h-full gap-3 rounded-[24px] p-7">
                     <div className="flex items-center justify-between">
-                      <span className="grid size-11 place-items-center rounded-2xl bg-brand/10 text-brand">
+                      <span className="icon-glow grid size-11 place-items-center rounded-2xl bg-brand/12 text-brand">
                         <s.icon className="size-5" aria-hidden />
                       </span>
                       <span className="text-sm font-medium text-muted-foreground tabular-nums">
@@ -295,7 +300,7 @@ export default function LandingPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               {teamFeatures.map((f, i) => (
                 <Reveal key={f.title} delay={(i % 2) * 0.05}>
-                  <div className="flex h-full gap-3 rounded-2xl bg-card p-5 shadow-(--shadow-card) backdrop-blur-(--glass-blur)">
+                  <div className="glass-panel hover-lift flex h-full gap-3 rounded-[22px] p-5">
                     <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-foreground/[0.05]">
                       <f.icon className="size-[18px]" aria-hidden />
                     </span>
@@ -312,15 +317,15 @@ export default function LandingPage() {
 
         {/* Privacy */}
         <section id="privacy" className="scroll-mt-24 px-5 sm:px-6">
-          <Reveal className="mx-auto grid max-w-6xl gap-10 rounded-[28px] bg-foreground p-8 text-background sm:p-12 lg:grid-cols-2">
+          <Reveal className="glass-panel mx-auto grid max-w-6xl gap-10 overflow-hidden rounded-[32px] p-8 sm:p-12 lg:grid-cols-2">
             <div className="grid content-start gap-3">
-              <span className="text-xs font-semibold tracking-wider uppercase opacity-60">
+              <span className="text-xs font-semibold tracking-wider text-brand uppercase">
                 Privacy
               </span>
               <h2 className="text-[32px] leading-tight font-semibold tracking-[-0.03em] sm:text-[40px]">
                 Your biometrics. Your rules.
               </h2>
-              <p className="text-[15px] leading-relaxed opacity-70">
+              <p className="text-[15px] leading-relaxed text-muted-foreground">
                 FaceVerse is a demo-grade platform, not bank-grade biometric security. Password and
                 Google sign-in always remain available.
               </p>
@@ -329,9 +334,12 @@ export default function LandingPage() {
               {privacyPoints.map((p) => (
                 <li
                   key={p.text}
-                  className="flex gap-3 rounded-2xl bg-background/[0.07] p-4 text-[15px] ring-1 ring-background/10"
+                  className="flex gap-3 rounded-2xl bg-foreground/[0.04] p-4 text-[15px] ring-1 ring-foreground/[0.06]"
                 >
-                  <p.icon className="mt-0.5 size-[18px] shrink-0 opacity-80" aria-hidden />
+                  <p.icon
+                    className="mt-0.5 size-[18px] shrink-0 text-success-foreground"
+                    aria-hidden
+                  />
                   {p.text}
                 </li>
               ))}
@@ -347,7 +355,7 @@ export default function LandingPage() {
               {faqs.map((f) => (
                 <details
                   key={f.q}
-                  className="group rounded-2xl bg-card shadow-(--shadow-card) backdrop-blur-(--glass-blur) open:shadow-(--shadow-card-hover)"
+                  className="group glass-panel rounded-[20px] open:shadow-(--shadow-card-hover)"
                 >
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 text-[15px] font-medium [&::-webkit-details-marker]:hidden">
                     {f.q}
@@ -367,7 +375,7 @@ export default function LandingPage() {
 
         {/* CTA */}
         <section className="px-5 pb-24 sm:px-6">
-          <Reveal className="mx-auto grid max-w-6xl justify-items-center gap-5 rounded-[28px] bg-card px-6 py-16 text-center shadow-(--shadow-card) backdrop-blur-(--glass-blur)">
+          <Reveal className="glass-panel mx-auto grid max-w-6xl justify-items-center gap-5 overflow-hidden rounded-[32px] px-6 py-16 text-center">
             <h2 className="max-w-2xl text-[32px] leading-tight font-semibold tracking-[-0.03em] sm:text-[44px]">
               Ready to try it on your own face?
             </h2>
@@ -481,12 +489,9 @@ function BentoCard({
 }) {
   return (
     <div
-      className={cn(
-        "hover-lift flex h-full flex-col rounded-[22px] bg-card p-7 shadow-(--shadow-card) backdrop-blur-(--glass-blur)",
-        className,
-      )}
+      className={cn("glass-panel hover-lift flex h-full flex-col rounded-[26px] p-7", className)}
     >
-      <span className="grid size-11 place-items-center rounded-2xl bg-brand/10 text-brand">
+      <span className="icon-glow grid size-11 place-items-center rounded-2xl bg-brand/12 text-brand">
         <Icon className="size-5" aria-hidden />
       </span>
       <h3 className="mt-5 text-lg font-semibold tracking-tight">{title}</h3>

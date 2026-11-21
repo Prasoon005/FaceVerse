@@ -39,7 +39,7 @@ export function AppShell({
         <Topbar user={user} portal={portal} />
         <main
           id="main"
-          className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-8 md:pb-12"
+          className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-8 md:pb-12 lg:px-10"
         >
           {children}
         </main>

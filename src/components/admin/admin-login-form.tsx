@@ -68,7 +68,7 @@ export function AdminLoginForm({ next }: { next: string }) {
     >
       <motion.div
         animate={shake}
-        className="grid gap-6 rounded-2xl border border-brand/20 bg-card/80 p-6 shadow-2xl shadow-brand/10 backdrop-blur-xl sm:p-8"
+        className="glass-panel grid gap-6 rounded-[28px] p-6 shadow-(--shadow-card-hover) sm:p-8"
       >
         <div className="grid justify-items-center gap-3 text-center">
           <div className="relative grid size-16 place-items-center">

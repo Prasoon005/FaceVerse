@@ -33,9 +33,7 @@ export function SiteHeader() {
       <div
         className={cn(
           "mx-auto flex h-14 max-w-6xl items-center gap-6 rounded-2xl px-4 transition-all duration-300",
-          scrolled
-            ? "bg-card shadow-(--shadow-card-hover) backdrop-blur-2xl backdrop-saturate-[1.8]"
-            : "bg-transparent",
+          scrolled ? "glass-panel shadow-(--shadow-card-hover)" : "bg-transparent",
         )}
       >
         <Link href="/" aria-label="FaceVerse home" className="rounded-md">

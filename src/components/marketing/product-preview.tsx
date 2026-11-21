@@ -24,7 +24,7 @@ export function ProductPreview() {
   return (
     <div
       aria-hidden
-      className="overflow-hidden rounded-[22px] bg-card shadow-[0_0_0_1px_var(--border),0_40px_80px_-30px_rgb(0_0_0/0.35)] backdrop-blur-(--glass-blur)"
+      className="glass-panel overflow-hidden rounded-[26px] shadow-(--shadow-card-hover)"
     >
       {/* Window chrome */}
       <div className="flex items-center gap-2 border-b px-4 py-3">
@@ -43,7 +43,7 @@ export function ProductPreview() {
               key={s.label}
               className={
                 s.active
-                  ? "flex items-center gap-2 rounded-lg bg-foreground/[0.07] px-2.5 py-1.5 text-xs font-medium"
+                  ? "nav-pill flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium"
                   : "flex items-center gap-2 px-2.5 py-1.5 text-xs text-muted-foreground"
               }
             >

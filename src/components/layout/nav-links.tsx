@@ -83,7 +83,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.title : undefined}
       className={cn(
-        "relative isolate flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] text-muted-foreground transition-colors duration-150 hover:bg-foreground/[0.04] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "relative isolate flex h-9 items-center gap-2.5 rounded-[10px] px-2.5 text-[13.5px] text-muted-foreground transition-colors duration-150 hover:bg-foreground/[0.04] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         active && "font-medium text-foreground",
         collapsed && "justify-center px-0",
       )}
@@ -93,7 +93,7 @@ function NavLink({
         <motion.span
           layoutId="nav-active"
           aria-hidden
-          className="absolute inset-0 -z-10 rounded-lg bg-foreground/[0.07]"
+          className="nav-pill absolute inset-0 -z-10 rounded-[10px]"
           transition={{ type: "spring", stiffness: 500, damping: 38 }}
         />
       ) : null}

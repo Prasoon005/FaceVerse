@@ -12,7 +12,7 @@ import { useUiStore } from "@/stores/ui-store";
 
 import { NavLinks } from "./nav-links";
 
-/** Desktop sidebar (md and up). Collapses to an icon rail. */
+/** Desktop sidebar (md and up): a floating glass panel that collapses to an icon rail. */
 export function Sidebar({ portal }: { portal: Portal }) {
   const collapsed = useUiStore((s) => s.sidebarCollapsed);
   const toggleSidebar = useUiStore((s) => s.toggleSidebar);
@@ -20,31 +20,33 @@ export function Sidebar({ portal }: { portal: Portal }) {
   return (
     <aside
       className={cn(
-        "sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r border-sidebar-border bg-sidebar backdrop-blur-(--glass-blur) backdrop-saturate-150 transition-[width] duration-200 ease-out md:flex",
-        collapsed ? "w-[60px]" : "w-60",
+        "sticky top-0 z-20 hidden h-dvh shrink-0 p-3 pr-0 transition-[width] duration-300 ease-out md:block",
+        collapsed ? "w-[84px]" : "w-[264px]",
       )}
     >
-      <div className={cn("flex h-14 items-center px-4", collapsed && "justify-center px-0")}>
-        <Link href={portalHome[portal]} aria-label="FaceVerse home" className="rounded-md">
-          <Logo showText={!collapsed} />
-        </Link>
-        {portal === "admin" && !collapsed ? <AdminBadge /> : null}
-      </div>
-      <div className="flex-1 overflow-y-auto px-3 py-2">
-        <NavLinks collapsed={collapsed} portal={portal} />
-      </div>
-      <div className={cn("border-t p-3", collapsed && "flex justify-center")}>
-        <Button
-          variant="ghost"
-          size={collapsed ? "icon" : "default"}
-          className={cn(!collapsed && "w-full justify-start text-muted-foreground")}
-          onClick={toggleSidebar}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          aria-expanded={!collapsed}
-        >
-          {collapsed ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
-          {collapsed ? null : "Collapse"}
-        </Button>
+      <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[24px] bg-sidebar">
+        <div className={cn("flex h-16 items-center px-4", collapsed && "justify-center px-0")}>
+          <Link href={portalHome[portal]} aria-label="FaceVerse home" className="rounded-md">
+            <Logo showText={!collapsed} />
+          </Link>
+          {portal === "admin" && !collapsed ? <AdminBadge /> : null}
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 py-1">
+          <NavLinks collapsed={collapsed} portal={portal} />
+        </div>
+        <div className={cn("p-3", collapsed && "flex justify-center")}>
+          <Button
+            variant="ghost"
+            size={collapsed ? "icon" : "default"}
+            className={cn(!collapsed && "w-full justify-start text-muted-foreground")}
+            onClick={toggleSidebar}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            aria-expanded={!collapsed}
+          >
+            {collapsed ? <PanelLeftOpen aria-hidden /> : <PanelLeftClose aria-hidden />}
+            {collapsed ? null : "Collapse"}
+          </Button>
+        </div>
       </div>
     </aside>
   );
@@ -57,14 +59,14 @@ export function MobileSidebar({ portal }: { portal: Portal }) {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="left" className="w-72 bg-sidebar p-0">
+      <SheetContent side="left" className="w-72 p-0">
         <SheetTitle className="sr-only">Navigation</SheetTitle>
         <SheetDescription className="sr-only">Move between FaceVerse sections</SheetDescription>
-        <div className="flex h-14 items-center px-4">
+        <div className="flex h-16 items-center px-4">
           <Logo />
           {portal === "admin" ? <AdminBadge /> : null}
         </div>
-        <div className="overflow-y-auto px-3 py-2">
+        <div className="overflow-y-auto px-3 py-1">
           <NavLinks onNavigate={() => setOpen(false)} portal={portal} />
         </div>
       </SheetContent>
@@ -75,7 +77,7 @@ export function MobileSidebar({ portal }: { portal: Portal }) {
 /** Marks the admin console so it's never confused with the user app. */
 function AdminBadge() {
   return (
-    <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand uppercase">
+    <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-brand/12 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand uppercase">
       <ShieldCheck className="size-3" aria-hidden /> Admin
     </span>
   );

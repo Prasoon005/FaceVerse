@@ -14,14 +14,14 @@ export default function AdminAuthLayout({ children }: LayoutProps<"/">) {
       <header className="flex items-center justify-between px-4 py-4 sm:px-6">
         <Link href="/" aria-label="FaceVerse home" className="flex items-center gap-2 rounded-md">
           <Logo />
-          <span className="rounded-full border border-brand/40 bg-brand/10 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand uppercase">
+          <span className="rounded-full bg-brand/12 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-brand uppercase">
             Admin console
           </span>
         </Link>
         <ThemeToggle />
       </header>
       <main className="flex flex-1 items-center justify-center px-4 pb-16">
-        <div className="w-full max-w-sm">{children}</div>
+        <div className="w-full max-w-[400px]">{children}</div>
       </main>
     </div>
   );

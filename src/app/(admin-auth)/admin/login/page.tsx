@@ -21,7 +21,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps<"/admin
   if (viewer) {
     // Signed in, but as a regular user.
     return (
-      <div className="grid animate-in gap-4 rounded-2xl border bg-card/80 p-6 text-center shadow-xl backdrop-blur-xl zoom-in-95 fade-in">
+      <div className="glass-panel grid animate-in gap-4 rounded-[28px] p-6 text-center zoom-in-95 fade-in">
         <span className="mx-auto grid size-12 place-items-center rounded-full bg-warning/10 text-warning-foreground">
           <ShieldAlert className="size-6" aria-hidden />
         </span>

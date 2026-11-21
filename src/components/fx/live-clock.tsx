@@ -39,12 +39,11 @@ export function LiveClock({ timeZone, className }: { timeZone: string; className
 
   return (
     <div
-      className={cn(
-        "inline-flex items-center gap-3 rounded-2xl bg-foreground/[0.035] px-3 py-2 ring-1 ring-foreground/[0.06]",
-        className,
-      )}
+      className={cn("glass-panel inline-flex items-center gap-3 rounded-2xl px-3 py-2", className)}
     >
-      <span className={cn("grid size-9 place-items-center rounded-xl bg-foreground/5", tone)}>
+      <span
+        className={cn("icon-glow grid size-9 place-items-center rounded-xl bg-foreground/5", tone)}
+      >
         <Icon className="size-[18px]" aria-hidden />
       </span>
       <span className="grid leading-tight">

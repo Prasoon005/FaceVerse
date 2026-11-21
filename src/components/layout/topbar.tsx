@@ -31,52 +31,52 @@ export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
   const setCommandOpen = useUiStore((s) => s.setCommandOpen);
 
   return (
-    <header
-      className={cn(
-        "sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-4 transition-[background-color,border-color,box-shadow] duration-300 md:px-8",
-        scrolled
-          ? "border-border bg-background/60 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.35)] backdrop-blur-2xl backdrop-saturate-[1.8]"
-          : "border-transparent bg-transparent",
-      )}
-    >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="md:hidden"
-        aria-label="Open navigation"
-        onClick={() => setMobileNavOpen(true)}
+    <header className="sticky top-0 z-30 px-3 pt-3 md:px-6">
+      <div
+        className={cn(
+          "glass-panel flex h-14 items-center gap-2 rounded-[20px] px-3 transition-shadow duration-300 md:px-4",
+          scrolled && "shadow-(--shadow-card-hover)",
+        )}
       >
-        <Menu aria-hidden />
-      </Button>
-      <div className="hidden min-w-0 flex-1 sm:block">
-        <Breadcrumbs />
-      </div>
-      <div className="ml-auto flex items-center gap-1">
-        <Button
-          variant="outline"
-          className="hidden h-8 w-60 justify-start gap-2 rounded-full bg-foreground/[0.04] px-3 text-muted-foreground shadow-none sm:flex"
-          onClick={() => setCommandOpen(true)}
-        >
-          <Search aria-hidden />
-          <span className="flex-1 text-left">Search…</span>
-          <kbd className="pointer-events-none rounded border bg-muted px-1.5 font-mono text-[10px]">
-            Ctrl K
-          </kbd>
-        </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="sm:hidden"
-          aria-label="Open command palette"
-          onClick={() => setCommandOpen(true)}
+          className="md:hidden"
+          aria-label="Open navigation"
+          onClick={() => setMobileNavOpen(true)}
         >
-          <Search aria-hidden />
+          <Menu aria-hidden />
         </Button>
-        <VoiceCommandButton portal={portal} />
-        <SoundToggle />
-        <ThemeToggle />
-        <NotificationsBell portal={portal} />
-        <UserMenu user={user} portal={portal} />
+        <div className="hidden min-w-0 flex-1 sm:block">
+          <Breadcrumbs />
+        </div>
+        <div className="ml-auto flex items-center gap-1">
+          <Button
+            variant="outline"
+            className="hidden h-9 w-64 justify-start gap-2 rounded-full border-transparent bg-foreground/[0.05] px-3.5 text-muted-foreground shadow-none sm:flex dark:bg-white/[0.06]"
+            onClick={() => setCommandOpen(true)}
+          >
+            <Search aria-hidden />
+            <span className="flex-1 text-left">Search…</span>
+            <kbd className="pointer-events-none rounded border bg-muted px-1.5 font-mono text-[10px]">
+              Ctrl K
+            </kbd>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="sm:hidden"
+            aria-label="Open command palette"
+            onClick={() => setCommandOpen(true)}
+          >
+            <Search aria-hidden />
+          </Button>
+          <VoiceCommandButton portal={portal} />
+          <SoundToggle />
+          <ThemeToggle />
+          <NotificationsBell portal={portal} />
+          <UserMenu user={user} portal={portal} />
+        </div>
       </div>
     </header>
   );

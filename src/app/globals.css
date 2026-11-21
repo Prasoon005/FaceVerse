@@ -66,7 +66,7 @@
   --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Ambient motion used by auth backgrounds, hero cards and loading states. */
-  --animate-aurora: aurora 18s ease-in-out infinite alternate;
+  --animate-aurora: aurora 28s ease-in-out infinite alternate;
   --animate-float: float 6s ease-in-out infinite;
   --animate-shimmer: shimmer 2.4s linear infinite;
   --animate-grid-pan: grid-pan 24s linear infinite;
@@ -119,155 +119,259 @@
   }
 }
 
+/* ==========================================================================
+   Theme: Apple-style neutrals + system accents, glass surfaces, glow in dark.
+   ========================================================================== */
+
 /* Light theme */
 :root {
-  --radius: 0.625rem;
-  /* Brand indigo, nudged per theme so brand-coloured text meets WCAG AA. */
-  --brand: #5b5ef0;
+  --radius: 0.75rem;
+  --brand: #0071e3;
 
-  --background: #f5f5f7;
+  --background: #f2f2f7;
   --foreground: #1d1d1f;
-  /* Glass surfaces: translucent so the soft backdrop shows through (blurred). */
-  --card: rgb(255 255 255 / 0.72);
+  /* Glass: translucent white over a soft colour field. */
+  --card: rgb(255 255 255 / 0.66);
   --card-solid: #ffffff;
   --card-foreground: #1d1d1f;
-  --popover: rgb(255 255 255 / 0.9);
+  --popover: rgb(255 255 255 / 0.86);
   --popover-foreground: #1d1d1f;
-  /* #6366F1 with white text is 4.47:1; this slightly deeper indigo passes WCAG AA. */
-  --primary: #5b5ef0;
+  /* #0071E3 with white text is 4.6:1 (WCAG AA). */
+  --primary: #0071e3;
   --primary-foreground: #ffffff;
-  --secondary: #ebebef;
+  --secondary: rgb(118 118 128 / 0.12);
   --secondary-foreground: #1d1d1f;
-  --muted: #ececf0;
+  --muted: rgb(118 118 128 / 0.1);
   --muted-foreground: #6e6e73;
-  --accent: #ebebef;
+  --accent: rgb(118 118 128 / 0.12);
   --accent-foreground: #1d1d1f;
-  --destructive: #dc2626;
+  --destructive: #d70015;
   --border: rgb(0 0 0 / 0.08);
-  --input: rgb(0 0 0 / 0.12);
-  --ring: #6366f1;
+  --input: rgb(0 0 0 / 0.1);
+  --ring: #0071e3;
 
-  --success: #10b981;
-  --success-foreground: #047857;
-  --warning: #f59e0b;
-  --warning-foreground: #b45309;
-  --danger: #ef4444;
-  --danger-foreground: #dc2626;
+  --success: #34c759;
+  --success-foreground: #248a3d;
+  --warning: #ff9500;
+  --warning-foreground: #c93400;
+  --danger: #ff3b30;
+  --danger-foreground: #d70015;
 
-  --chart-1: #6366f1;
-  --chart-2: #10b981;
-  --chart-3: #f59e0b;
-  --chart-4: #ef4444;
-  --chart-5: #a1a1aa;
+  --chart-1: #007aff;
+  --chart-2: #34c759;
+  --chart-3: #ff9500;
+  --chart-4: #ff3b30;
+  --chart-5: #8e8e93;
 
-  --sidebar: rgb(250 250 252 / 0.7);
+  --sidebar: rgb(255 255 255 / 0.55);
   --sidebar-foreground: #1d1d1f;
-  --sidebar-primary: #5b5ef0;
+  --sidebar-primary: #0071e3;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgb(0 0 0 / 0.05);
   --sidebar-accent-foreground: #1d1d1f;
-  --sidebar-border: rgb(0 0 0 / 0.08);
-  --sidebar-ring: #6366f1;
+  --sidebar-border: rgb(0 0 0 / 0.06);
+  --sidebar-ring: #0071e3;
 
-  --glass-blur: 24px;
-  --glass-edge: rgb(255 255 255 / 0.8);
+  --glass-blur: 28px;
+  --glass-edge-top: rgb(255 255 255 / 0.95);
+  --glass-edge-bottom: rgb(255 255 255 / 0.25);
   --shadow-card:
-    0 0 0 1px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 30px -14px rgb(0 0 0 / 0.12);
+    0 0 0 0.5px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px -16px rgb(0 0 0 / 0.14);
   --shadow-card-hover:
-    0 0 0 1px rgb(0 0 0 / 0.07), 0 2px 4px rgb(0 0 0 / 0.05), 0 18px 40px -16px rgb(0 0 0 / 0.18);
-  /* One soft, muted wash behind everything. */
-  --backdrop:
-    radial-gradient(1100px 600px at 10% -10%, rgb(91 94 240 / 0.09), transparent 60%),
-    radial-gradient(900px 520px at 100% 0%, rgb(14 165 233 / 0.06), transparent 60%);
+    0 0 0 0.5px rgb(0 0 0 / 0.08), 0 2px 6px rgb(0 0 0 / 0.05), 0 22px 44px -18px rgb(0 0 0 / 0.22);
+  --glow-strength: 0;
+
+  /* Ambient colour field behind the glass. */
+  --orb-1: rgb(0 122 255 / 0.16);
+  --orb-2: rgb(175 82 222 / 0.12);
+  --orb-3: rgb(48 176 199 / 0.12);
 }
 
 /* Dark theme (default) */
 .dark {
-  --brand: #818cf8;
-  --background: #050506;
+  --brand: #0a84ff;
+  --background: #000000;
   --foreground: #f5f5f7;
-  --card: rgb(28 28 30 / 0.62);
+  --card: rgb(36 36 40 / 0.5);
   --card-solid: #1c1c1e;
   --card-foreground: #f5f5f7;
-  --popover: rgb(30 30 33 / 0.9);
+  --popover: rgb(30 30 34 / 0.82);
   --popover-foreground: #f5f5f7;
-  --primary: #5b5ef0;
+  --primary: #0071e3;
   --primary-foreground: #ffffff;
-  --secondary: #2a2a2d;
+  --secondary: rgb(118 118 128 / 0.24);
   --secondary-foreground: #f5f5f7;
-  --muted: #232326;
-  --muted-foreground: #98989d;
-  --accent: #2a2a2d;
+  --muted: rgb(118 118 128 / 0.18);
+  --muted-foreground: #98989f;
+  --accent: rgb(118 118 128 / 0.24);
   --accent-foreground: #f5f5f7;
-  --destructive: #ef4444;
-  --border: rgb(255 255 255 / 0.08);
+  --destructive: #ff453a;
+  --border: rgb(255 255 255 / 0.09);
   --input: rgb(255 255 255 / 0.12);
-  --ring: #6366f1;
+  --ring: #0a84ff;
 
-  --success: #10b981;
-  --success-foreground: #34d399;
-  --warning: #f59e0b;
-  --warning-foreground: #fbbf24;
-  --danger: #ef4444;
-  --danger-foreground: #f87171;
+  --success: #30d158;
+  --success-foreground: #30d158;
+  --warning: #ff9f0a;
+  --warning-foreground: #ff9f0a;
+  --danger: #ff453a;
+  --danger-foreground: #ff6961;
 
-  --chart-1: #818cf8;
-  --chart-2: #34d399;
-  --chart-3: #fbbf24;
-  --chart-4: #f87171;
-  --chart-5: #52525b;
+  --chart-1: #0a84ff;
+  --chart-2: #30d158;
+  --chart-3: #ff9f0a;
+  --chart-4: #ff453a;
+  --chart-5: #8e8e93;
 
-  --sidebar: rgb(16 16 18 / 0.6);
+  --sidebar: rgb(28 28 32 / 0.45);
   --sidebar-foreground: #f5f5f7;
-  --sidebar-primary: #5b5ef0;
+  --sidebar-primary: #0071e3;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-accent-foreground: #f5f5f7;
   --sidebar-border: rgb(255 255 255 / 0.08);
-  --sidebar-ring: #6366f1;
+  --sidebar-ring: #0a84ff;
 
-  --glass-edge: rgb(255 255 255 / 0.06);
+  --glass-edge-top: rgb(255 255 255 / 0.18);
+  --glass-edge-bottom: rgb(255 255 255 / 0.03);
   --shadow-card:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.07),
-    0 10px 30px -14px rgb(0 0 0 / 0.7);
+    inset 0 1px 0 0 rgb(255 255 255 / 0.06), 0 0 0 0.5px rgb(255 255 255 / 0.06),
+    0 16px 40px -20px rgb(0 0 0 / 0.9);
   --shadow-card-hover:
-    inset 0 1px 0 0 rgb(255 255 255 / 0.07), 0 0 0 1px rgb(255 255 255 / 0.11),
-    0 18px 40px -16px rgb(0 0 0 / 0.8);
-  --backdrop:
-    radial-gradient(1100px 600px at 10% -10%, rgb(99 102 241 / 0.13), transparent 60%),
-    radial-gradient(900px 520px at 100% 0%, rgb(14 165 233 / 0.06), transparent 60%);
+    inset 0 1px 0 0 rgb(255 255 255 / 0.09), 0 0 0 0.5px rgb(255 255 255 / 0.1),
+    0 24px 50px -20px rgb(0 0 0 / 0.95),
+    0 0 40px -12px color-mix(in oklab, var(--brand) 45%, transparent);
+  --glow-strength: 1;
+
+  --orb-1: rgb(10 132 255 / 0.26);
+  --orb-2: rgb(191 90 242 / 0.18);
+  --orb-3: rgb(64 200 224 / 0.12);
 }
 
 /* Phones get a lighter blur: cheaper to paint, still reads as glass. */
 @media (max-width: 767px) {
   :root {
-    --glass-blur: 14px;
+    --glass-blur: 16px;
   }
 }
 
-/* Admin console accent: violet instead of indigo, so the two portals never look alike. */
+/* Admin console: Apple purple accent, so the two portals never look alike. */
 [data-portal="admin"],
 html[data-portal="admin"] {
-  --brand: #9333ea;
-  --primary: #9333ea;
-  --ring: #a855f7;
-  --sidebar-primary: #9333ea;
-  --sidebar-ring: #a855f7;
-  --chart-1: #a855f7;
-  --backdrop:
-    radial-gradient(1100px 600px at 10% -10%, rgb(147 51 234 / 0.08), transparent 60%),
-    radial-gradient(900px 520px at 100% 0%, rgb(99 102 241 / 0.06), transparent 60%);
+  --brand: #8944ab;
+  --primary: #8944ab;
+  --ring: #af52de;
+  --sidebar-primary: #8944ab;
+  --sidebar-ring: #af52de;
+  --chart-1: #af52de;
+  --orb-1: rgb(175 82 222 / 0.16);
+  --orb-2: rgb(88 86 214 / 0.12);
+  --orb-3: rgb(255 45 85 / 0.07);
 }
 .dark [data-portal="admin"],
 html.dark[data-portal="admin"] {
-  --brand: #c084fc;
-  --chart-1: #c084fc;
-  --backdrop:
-    radial-gradient(1100px 600px at 10% -10%, rgb(168 85 247 / 0.12), transparent 60%),
-    radial-gradient(900px 520px at 100% 0%, rgb(99 102 241 / 0.06), transparent 60%);
+  --brand: #bf5af2;
+  --primary: #8944ab;
+  --ring: #bf5af2;
+  --chart-1: #bf5af2;
+  --orb-1: rgb(191 90 242 / 0.24);
+  --orb-2: rgb(94 92 230 / 0.18);
+  --orb-3: rgb(255 55 95 / 0.08);
 }
 
-/* ---------- Dynamic UI effects (driven by components/fx) ---------- */
+/* ---------- Glass surfaces ---------- */
+@layer components {
+  /* Frosted panel: translucent fill, blur, soft shadow and a light-catching gradient edge. */
+  .glass-panel {
+    position: relative;
+    background-color: var(--card);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    box-shadow: var(--shadow-card);
+  }
+  .glass-panel::before,
+  .glass-edge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      180deg,
+      var(--glass-edge-top),
+      var(--glass-edge-bottom) 45%,
+      transparent 80%
+    );
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  /* Plain "border bg-card" tiles used across pages also become glass. */
+  .bg-card {
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+  }
+}
+
+/* ---------- Dark-mode glow ---------- */
+.dark .hover-lift:hover,
+.dark [data-slot="card"].hover-lift:hover {
+  box-shadow: var(--shadow-card-hover);
+}
+.dark [data-slot="button"][data-variant="default"] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    0 0 0 0.5px rgb(255 255 255 / 0.08),
+    0 8px 24px -8px color-mix(in oklab, var(--primary) 80%, transparent);
+}
+.dark [data-slot="button"][data-variant="default"]:hover {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.26),
+    0 0 0 0.5px rgb(255 255 255 / 0.12),
+    0 10px 32px -6px color-mix(in oklab, var(--primary) 95%, transparent);
+}
+.dark [data-slot="input"]:focus-visible,
+.dark [data-slot="textarea"]:focus-visible {
+  box-shadow:
+    0 0 0 4px color-mix(in oklab, var(--ring) 22%, transparent),
+    0 0 28px -6px color-mix(in oklab, var(--ring) 60%, transparent);
+}
+/* Icon tiles and status dots pick up a soft halo of their own colour. */
+.dark .icon-glow {
+  box-shadow: 0 0 24px -6px currentColor;
+}
+.dark .dot-glow {
+  box-shadow: 0 0 10px 1px currentColor;
+}
+.dark .ring-glow {
+  filter: drop-shadow(0 0 6px currentColor);
+}
+.dark .text-glow {
+  text-shadow: 0 0 24px color-mix(in oklab, var(--brand) 55%, transparent);
+}
+
+/* Selected item in the sidebar / bottom bar / tabs. */
+.nav-pill,
+[data-slot="tabs-list"][data-variant="default"]
+  [data-slot="tabs-trigger"]:is([data-state="active"], [data-active]) {
+  background: rgb(255 255 255 / 0.9);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.08),
+    0 0 0 0.5px rgb(0 0 0 / 0.06);
+}
+.dark .nav-pill,
+.dark
+  [data-slot="tabs-list"][data-variant="default"]
+  [data-slot="tabs-trigger"]:is([data-state="active"], [data-active]) {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.06));
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 0.5px rgb(255 255 255 / 0.08),
+    0 0 26px -8px color-mix(in oklab, var(--brand) 70%, transparent);
+}
 
 /* Press feedback: buttons give a little when pressed. */
 [data-slot="button"]:not(:disabled):active {
@@ -276,7 +380,7 @@ html.dark[data-portal="admin"] {
 
 /* Shimmer skeleton: a light band sweeping across. */
 .skeleton-shimmer {
-  background-color: color-mix(in oklab, var(--muted) 80%, transparent);
+  background-color: var(--muted);
   background-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -294,7 +398,7 @@ html.dark[data-portal="admin"] {
   mix-blend-mode: normal;
 }
 
-/* Kept for older markup: plain text now (no gradient). */
+/* Kept for older markup: plain text (no gradient). */
 .text-gradient {
   color: inherit;
 }
@@ -302,18 +406,19 @@ html.dark[data-portal="admin"] {
 /* Soft lift for interactive tiles. */
 .hover-lift {
   transition:
-    transform 200ms var(--ease-out-soft),
-    box-shadow 200ms var(--ease-out-soft),
+    transform 220ms var(--ease-out-soft),
+    box-shadow 220ms var(--ease-out-soft),
     background-color 200ms;
 }
 .hover-lift:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-card-hover);
 }
 
 /* Toasts: glass. */
 [data-sonner-toast] {
-  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  backdrop-filter: blur(28px) saturate(1.8);
   box-shadow: var(--shadow-card-hover) !important;
 }
 

@@ -62,7 +62,9 @@ export function ProgressRing({
           fill="none"
           strokeWidth={stroke}
           strokeLinecap="round"
-          stroke={color}
+          stroke="currentColor"
+          style={{ color }}
+          className="ring-glow"
           strokeDasharray={c}
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - clamped) }}

@@ -51,7 +51,7 @@ export function MobileBottomNav({ portal }: { portal: Portal }) {
       aria-label="Quick navigation"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 md:hidden"
     >
-      <ul className="grid grid-cols-5 rounded-[22px] bg-card p-1.5 shadow-(--shadow-card-hover) backdrop-blur-2xl backdrop-saturate-[1.8]">
+      <ul className="glass-panel grid grid-cols-5 rounded-[24px] p-1.5 shadow-(--shadow-card-hover)">
         {list.map((item) => {
           const active = item.href === activeHref;
           return (
@@ -68,7 +68,7 @@ export function MobileBottomNav({ portal }: { portal: Portal }) {
                   <motion.span
                     layoutId="bottom-nav-active"
                     aria-hidden
-                    className="absolute inset-0 -z-10 rounded-xl bg-foreground/[0.07]"
+                    className="nav-pill absolute inset-0 -z-10 rounded-[16px]"
                     transition={{ type: "spring", stiffness: 500, damping: 36 }}
                   />
                 ) : null}

@@ -113,12 +113,12 @@ export async function WelcomeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-2xl bg-card p-5 shadow-(--shadow-card) backdrop-blur-(--glass-blur) backdrop-saturate-[1.8] sm:p-7">
+    <section className="glass-panel overflow-hidden rounded-[28px] p-5 sm:p-8">
       <div className="relative grid gap-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="grid gap-1">
-            <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] sm:text-[32px]">
-              {greeting(settings.timezone)}, {firstName}
+            <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] sm:text-[36px]">
+              {greeting(settings.timezone)}, <span className="text-glow">{firstName}</span>
             </h1>
             <p className="text-[15px] text-muted-foreground">Here&apos;s where you stand today.</p>
           </div>
@@ -131,7 +131,12 @@ export async function WelcomeHero() {
                 href={c.href}
                 className="group flex items-center gap-3 rounded-xl bg-foreground/[0.035] p-3 ring-1 ring-foreground/[0.06] transition-colors hover:bg-foreground/[0.06]"
               >
-                <span className={cn("grid size-9 place-items-center rounded-lg", tones[c.tone])}>
+                <span
+                  className={cn(
+                    "icon-glow grid size-10 place-items-center rounded-xl",
+                    tones[c.tone],
+                  )}
+                >
                   <c.icon className="size-4" aria-hidden />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-sm font-medium">{c.text}</span>
