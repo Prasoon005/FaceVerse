@@ -14,9 +14,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   return (
     <div className="grid gap-6">
-      <div className="grid gap-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="text-sm text-muted-foreground">Sign in to your FaceVerse workspace</p>
+      <div className="grid gap-1.5 text-center lg:text-left">
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em]">
+          Welcome back
+        </h1>
+        <p className="text-[15px] text-muted-foreground">Sign in to your FaceVerse workspace.</p>
       </div>
       <LoginForm next={next} />
       <AuthErrorToast message={error} notice={notice} />

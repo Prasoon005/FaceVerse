@@ -40,19 +40,15 @@ export function LiveClock({ timeZone, className }: { timeZone: string; className
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-3 rounded-2xl border bg-background/40 px-3 py-2 backdrop-blur-md",
+        "inline-flex items-center gap-3 rounded-2xl bg-foreground/[0.035] px-3 py-2 ring-1 ring-foreground/[0.06]",
         className,
       )}
     >
-      <motion.span
-        animate={{ rotate: [0, 8, -8, 0], scale: [1, 1.06, 1] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        className={cn("grid size-9 place-items-center rounded-xl bg-foreground/5", tone)}
-      >
-        <Icon className="size-5" aria-hidden />
-      </motion.span>
+      <span className={cn("grid size-9 place-items-center rounded-xl bg-foreground/5", tone)}>
+        <Icon className="size-[18px]" aria-hidden />
+      </span>
       <span className="grid leading-tight">
-        <span className="font-mono text-lg font-semibold tabular-nums" aria-live="off">
+        <span className="text-lg font-semibold tracking-tight tabular-nums" aria-live="off">
           {parts ? parts.time : "--:--"}
           <span className="ml-0.5 inline-block w-[2ch] text-xs text-muted-foreground">
             <AnimatePresence mode="popLayout" initial={false}>

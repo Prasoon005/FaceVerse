@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { LoaderCircle, ScanFace, ShieldCheck } from "lucide-react";
+import { LoaderCircle, Lock, Mail, ScanFace, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -46,6 +46,7 @@ export function LoginForm({ next }: { next: string }) {
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
+          icon={Mail}
           error={errors.email?.message}
           {...register("email")}
         />
@@ -54,15 +55,17 @@ export function LoginForm({ next }: { next: string }) {
           label="Password"
           type="password"
           autoComplete="current-password"
+          placeholder="Your password"
+          icon={Lock}
           error={errors.password?.message}
           {...register("password")}
         />
-        <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" size="lg" className="h-11 w-full rounded-xl" disabled={isSubmitting}>
           {isSubmitting ? <LoaderCircle className="animate-spin" aria-hidden /> : null}
           Sign in
         </Button>
       </form>
-      <Button variant="outline" size="lg" className="w-full" asChild>
+      <Button variant="outline" size="lg" className="h-11 w-full rounded-xl" asChild>
         <Link
           href={
             next === "/dashboard"

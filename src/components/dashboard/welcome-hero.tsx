@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import { LiveClock } from "@/components/fx/live-clock";
 import { ProgressRing } from "@/components/fx/progress-ring";
-import { TiltCard } from "@/components/fx/tilt-card";
 import { StaggerList, StaggerListItem } from "@/components/shared/motion";
 import { getAttendanceSettings, getViewer } from "@/lib/admin/server";
 import { localDay, monthRange } from "@/lib/attendance/days";
@@ -114,22 +113,14 @@ export async function WelcomeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-[inset_0_1px_0_0_var(--glass-edge)] backdrop-blur-(--glass-blur) sm:p-6">
-      <div
-        aria-hidden
-        className="absolute -top-24 -right-16 size-72 animate-aurora rounded-full bg-brand/15 blur-3xl"
-      />
-      <div
-        aria-hidden
-        className="absolute -bottom-24 left-1/3 size-64 animate-aurora rounded-full bg-success/10 blur-3xl [animation-delay:-7s]"
-      />
-      <div className="relative grid gap-4">
+    <section className="relative overflow-hidden rounded-2xl bg-card p-5 shadow-(--shadow-card) backdrop-blur-(--glass-blur) backdrop-saturate-[1.8] sm:p-7">
+      <div className="relative grid gap-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="grid gap-1">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {greeting(settings.timezone)}, <span className="text-gradient">{firstName}</span>
+            <h1 className="text-[26px] leading-tight font-semibold tracking-[-0.025em] sm:text-[32px]">
+              {greeting(settings.timezone)}, {firstName}
             </h1>
-            <p className="text-sm text-muted-foreground">Here&apos;s where you stand today.</p>
+            <p className="text-[15px] text-muted-foreground">Here&apos;s where you stand today.</p>
           </div>
           <LiveClock timeZone={settings.timezone} />
         </div>
@@ -138,7 +129,7 @@ export async function WelcomeHero() {
             <StaggerListItem key={c.href}>
               <Link
                 href={c.href}
-                className="hover-lift group flex items-center gap-3 rounded-xl border bg-background/60 p-3 backdrop-blur"
+                className="group flex items-center gap-3 rounded-xl bg-foreground/[0.035] p-3 ring-1 ring-foreground/[0.06] transition-colors hover:bg-foreground/[0.06]"
               >
                 <span className={cn("grid size-9 place-items-center rounded-lg", tones[c.tone])}>
                   <c.icon className="size-4" aria-hidden />
@@ -153,47 +144,43 @@ export async function WelcomeHero() {
           ))}
         </StaggerList>
         <div className="grid gap-3 sm:grid-cols-2">
-          <TiltCard max={5}>
-            <Link
-              href="/attendance"
-              className="flex h-full items-center gap-4 rounded-xl border bg-background/50 p-4 backdrop-blur transition-colors hover:border-brand/40"
-            >
-              <ProgressRing
-                ratio={rate}
-                value={rate === null ? null : Math.round(rate * 100)}
-                label="Attendance this month"
-              />
-              <span className="grid gap-0.5">
-                <span className="text-sm font-medium">Attendance this month</span>
-                <span className="text-xs text-muted-foreground">
-                  {rate === null
-                    ? "No working days yet this month"
-                    : `${attended} of ${counted.length} working days`}
-                </span>
+          <Link
+            href="/attendance"
+            className="flex h-full items-center gap-4 rounded-xl bg-foreground/[0.035] p-4 ring-1 ring-foreground/[0.06] transition-colors hover:bg-foreground/[0.06]"
+          >
+            <ProgressRing
+              ratio={rate}
+              value={rate === null ? null : Math.round(rate * 100)}
+              label="Attendance this month"
+            />
+            <span className="grid gap-0.5">
+              <span className="text-sm font-medium">Attendance this month</span>
+              <span className="text-xs text-muted-foreground">
+                {rate === null
+                  ? "No working days yet this month"
+                  : `${attended} of ${counted.length} working days`}
               </span>
-            </Link>
-          </TiltCard>
-          <TiltCard max={5}>
-            <Link
-              href="/reasons"
-              className="flex h-full items-center gap-4 rounded-xl border bg-background/50 p-4 backdrop-blur transition-colors hover:border-brand/40"
-            >
-              <ProgressRing
-                ratio={base ? score / base : null}
-                value={score}
-                suffix={`/${base}`}
-                label="Score this month"
-              />
-              <span className="grid gap-0.5">
-                <span className="text-sm font-medium">Score this month</span>
-                <span className="text-xs text-muted-foreground">
-                  {month.score.deducted
-                    ? `${month.score.deducted} points deducted`
-                    : "No deductions. Keep it up."}
-                </span>
+            </span>
+          </Link>
+          <Link
+            href="/reasons"
+            className="flex h-full items-center gap-4 rounded-xl bg-foreground/[0.035] p-4 ring-1 ring-foreground/[0.06] transition-colors hover:bg-foreground/[0.06]"
+          >
+            <ProgressRing
+              ratio={base ? score / base : null}
+              value={score}
+              suffix={`/${base}`}
+              label="Score this month"
+            />
+            <span className="grid gap-0.5">
+              <span className="text-sm font-medium">Score this month</span>
+              <span className="text-xs text-muted-foreground">
+                {month.score.deducted
+                  ? `${month.score.deducted} points deducted`
+                  : "No deductions. Keep it up."}
               </span>
-            </Link>
-          </TiltCard>
+            </span>
+          </Link>
         </div>
       </div>
     </section>

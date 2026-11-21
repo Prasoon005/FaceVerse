@@ -24,7 +24,7 @@ export function ProgressRing({
   suffix = "%",
   label,
   size = 88,
-  stroke = 8,
+  stroke = 7,
 }: {
   ratio: number | null;
   value: number | null;
@@ -53,7 +53,7 @@ export function ProgressRing({
           r={r}
           fill="none"
           strokeWidth={stroke}
-          className="stroke-foreground/10"
+          className="stroke-foreground/[0.08]"
         />
         <motion.circle
           cx={size / 2}
@@ -67,10 +67,9 @@ export function ProgressRing({
           initial={{ strokeDashoffset: c }}
           animate={{ strokeDashoffset: c * (1 - clamped) }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-          style={{ filter: `drop-shadow(0 0 6px color-mix(in oklab, ${color} 55%, transparent))` }}
         />
       </svg>
-      <span className="absolute font-mono text-lg font-semibold tabular-nums">
+      <span className="absolute text-lg font-semibold tracking-tight tabular-nums">
         {value === null ? (
           <span className="text-muted-foreground">-</span>
         ) : (

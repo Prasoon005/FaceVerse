@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 
-import { TiltCard } from "@/components/fx/tilt-card";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
@@ -29,24 +28,19 @@ export function StatCard({
   tone?: Tone;
 }) {
   return (
-    <TiltCard>
-      <Card className="group h-full gap-3 px-4 py-4 transition-shadow hover:shadow-lg">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">{label}</span>
-          <span
-            className={cn(
-              "grid size-8 place-items-center rounded-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6",
-              toneClasses[tone],
-            )}
-          >
-            <Icon className="size-4" aria-hidden />
-          </span>
-        </div>
-        <div className="font-mono text-2xl font-semibold tabular-nums">
+    <Card className="hover-lift h-full gap-4 px-5 py-5">
+      <div className="flex items-start justify-between gap-3">
+        <span className="text-[13px] font-medium text-muted-foreground">{label}</span>
+        <span className={cn("grid size-9 place-items-center rounded-xl", toneClasses[tone])}>
+          <Icon className="size-[18px]" aria-hidden />
+        </span>
+      </div>
+      <div className="grid gap-1">
+        <div className="text-[30px] leading-none font-semibold tracking-tight tabular-nums">
           {typeof value === "number" ? <AnimatedNumber value={value} /> : value}
         </div>
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-      </Card>
-    </TiltCard>
+      </div>
+    </Card>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import { Menu, Search } from "lucide-react";
+import { useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Portal } from "@/config/site";
+import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
 import { Breadcrumbs } from "./breadcrumbs";
@@ -13,12 +15,30 @@ import { ThemeToggle } from "./theme-toggle";
 import { VoiceCommandButton } from "./voice-command-button";
 import { type ShellUser, UserMenu } from "./user-menu";
 
+function subscribeScroll(onChange: () => void) {
+  window.addEventListener("scroll", onChange, { passive: true });
+  return () => window.removeEventListener("scroll", onChange);
+}
+
+/** The top bar is borderless at the top of the page and frosts over once content scrolls under it. */
 export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
+  const scrolled = useSyncExternalStore(
+    subscribeScroll,
+    () => window.scrollY > 4,
+    () => false,
+  );
   const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen);
   const setCommandOpen = useUiStore((s) => s.setCommandOpen);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/40 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-6">
+    <header
+      className={cn(
+        "sticky top-0 z-30 flex h-14 items-center gap-2 border-b px-4 transition-[background-color,border-color,box-shadow] duration-300 md:px-8",
+        scrolled
+          ? "border-border bg-background/60 shadow-[0_8px_24px_-18px_rgb(0_0_0/0.35)] backdrop-blur-2xl backdrop-saturate-[1.8]"
+          : "border-transparent bg-transparent",
+      )}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -34,7 +54,7 @@ export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
       <div className="ml-auto flex items-center gap-1">
         <Button
           variant="outline"
-          className="hidden h-8 w-56 justify-start gap-2 text-muted-foreground sm:flex"
+          className="hidden h-8 w-60 justify-start gap-2 rounded-full bg-foreground/[0.04] px-3 text-muted-foreground shadow-none sm:flex"
           onClick={() => setCommandOpen(true)}
         >
           <Search aria-hidden />

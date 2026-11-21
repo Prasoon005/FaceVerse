@@ -180,7 +180,7 @@ export default async function AdminOverviewPage() {
       <PageHeader
         title={
           <>
-            {greeting(settings.timezone)}, <span className="text-gradient">{firstName}</span>
+            {greeting(settings.timezone)}, {firstName}
           </>
         }
         description="Everyone's attendance, approvals and absence reasons in one place."

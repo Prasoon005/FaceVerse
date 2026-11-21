@@ -41,7 +41,7 @@ export function NavLinks({
             {collapsed ? (
               <span className="sr-only">{section.title}</span>
             ) : (
-              <span className="px-2.5 text-xs font-medium text-muted-foreground">
+              <span className="px-2.5 text-[11px] font-semibold tracking-wider text-muted-foreground/80 uppercase">
                 {section.title}
               </span>
             )}
@@ -83,7 +83,7 @@ function NavLink({
       aria-current={active ? "page" : undefined}
       aria-label={collapsed ? item.title : undefined}
       className={cn(
-        "relative isolate flex h-8 items-center gap-2.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-foreground/5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        "relative isolate flex h-9 items-center gap-2.5 rounded-lg px-2.5 text-[13.5px] text-muted-foreground transition-colors duration-150 hover:bg-foreground/[0.04] hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         active && "font-medium text-foreground",
         collapsed && "justify-center px-0",
       )}
@@ -93,11 +93,9 @@ function NavLink({
         <motion.span
           layoutId="nav-active"
           aria-hidden
-          className="absolute inset-0 -z-10 rounded-md bg-brand/10 shadow-[0_0_24px_-8px_var(--brand)] ring-1 ring-brand/25"
+          className="absolute inset-0 -z-10 rounded-lg bg-foreground/[0.07]"
           transition={{ type: "spring", stiffness: 500, damping: 38 }}
-        >
-          <span className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-brand" />
-        </motion.span>
+        />
       ) : null}
       <Icon className={cn("size-4 shrink-0", active && "text-brand")} aria-hidden />
       {collapsed ? null : (

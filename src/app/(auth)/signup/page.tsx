@@ -7,9 +7,13 @@ export const metadata: Metadata = { title: "Create account" };
 export default function SignupPage() {
   return (
     <div className="grid gap-6">
-      <div className="grid gap-1 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-        <p className="text-sm text-muted-foreground">Free forever. No credit card.</p>
+      <div className="grid gap-1.5 text-center lg:text-left">
+        <h1 className="text-[28px] leading-tight font-semibold tracking-[-0.025em]">
+          Create your account
+        </h1>
+        <p className="text-[15px] text-muted-foreground">
+          Set up your workspace in under a minute. Free, no card needed.
+        </p>
       </div>
       <SignupForm />
     </div>

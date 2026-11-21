@@ -27,7 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { fireConfetti } from "@/lib/ui/confetti";
 import { useSoundFeedback } from "@/hooks/use-sound-feedback";
 import { formatDay, formatTimeIn } from "@/lib/format";
 import type { AttendanceResponse } from "@/app/api/attendance/route";
@@ -74,7 +73,6 @@ export function CheckInCard({
       const body = (await res.json()) as AttendanceResponse;
       if (body.ok) {
         play("success");
-        fireConfetti();
         setPhase({ kind: "done", action: body.action, at: body.at });
         router.refresh();
       } else {
@@ -123,7 +121,7 @@ export function CheckInCard({
               today. See you tomorrow!
             </p>
           ) : (
-            <Button size="lg" onClick={start} className="w-full sm:w-fit" data-magnetic>
+            <Button size="lg" onClick={start} className="w-full sm:w-fit">
               {record ? <LogOut aria-hidden /> : <LogIn aria-hidden />} {actionLabel}
             </Button>
           )

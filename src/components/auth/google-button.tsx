@@ -30,7 +30,7 @@ export function GoogleButton({ next }: { next: string }) {
       type="button"
       variant="outline"
       size="lg"
-      className="w-full"
+      className="h-11 w-full rounded-xl"
       onClick={signIn}
       disabled={pending}
     >

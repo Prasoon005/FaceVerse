@@ -20,7 +20,7 @@ export function Sidebar({ portal }: { portal: Portal }) {
   return (
     <aside
       className={cn(
-        "sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r bg-sidebar backdrop-blur-(--glass-blur) backdrop-saturate-150 transition-[width] duration-200 ease-out md:flex",
+        "sticky top-0 z-20 hidden h-dvh shrink-0 flex-col border-r border-sidebar-border bg-sidebar backdrop-blur-(--glass-blur) backdrop-saturate-150 transition-[width] duration-200 ease-out md:flex",
         collapsed ? "w-[60px]" : "w-60",
       )}
     >

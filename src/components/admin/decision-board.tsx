@@ -22,7 +22,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useServerAction } from "@/hooks/use-server-action";
 import type { ActionResult } from "@/lib/actions/admin";
 import { formatRelative } from "@/lib/format";
-import { fireConfetti } from "@/lib/ui/confetti";
 import { cn } from "@/lib/utils";
 
 export type DecisionItem = {
@@ -187,10 +186,7 @@ export function DecisionBoard({
                 const { item, approve } = deciding;
                 run(item.id, () => decide({ id: item.id, approve, note: note || undefined }), {
                   success: approve ? "Approved" : "Rejected",
-                  onSuccess: () => {
-                    if (approve) fireConfetti({ count: 80 });
-                    setDeciding(null);
-                  },
+                  onSuccess: () => setDeciding(null),
                 });
               }}
             >

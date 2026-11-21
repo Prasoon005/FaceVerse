@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 
 import { AppBackdrop } from "@/components/fx/app-backdrop";
-import { InteractionEffects } from "@/components/fx/interaction-effects";
 import type { Portal } from "@/config/site";
 
 import { AnnouncementPopup } from "./announcement-popup";
@@ -38,13 +37,15 @@ export function AppShell({
       <MobileSidebar portal={portal} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Topbar user={user} portal={portal} />
-        <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-28 md:px-6 md:pb-6">
+        <main
+          id="main"
+          className="mx-auto w-full max-w-7xl flex-1 px-4 pt-6 pb-28 md:px-8 md:pt-8 md:pb-12"
+        >
           {children}
         </main>
       </div>
       <MobileBottomNav portal={portal} />
       <CommandMenu portal={portal} />
-      <InteractionEffects />
       {portal === "user" ? <AnnouncementPopup /> : null}
       <PortalAttribute portal={portal} />
     </div>

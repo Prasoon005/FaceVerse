@@ -51,7 +51,7 @@ export function MobileBottomNav({ portal }: { portal: Portal }) {
       aria-label="Quick navigation"
       className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-40 md:hidden"
     >
-      <ul className="grid grid-cols-5 rounded-2xl border bg-card p-1.5 shadow-[inset_0_1px_0_0_var(--glass-edge),0_12px_40px_-12px_rgb(0_0_0/0.45)] backdrop-blur-xl backdrop-saturate-150">
+      <ul className="grid grid-cols-5 rounded-[22px] bg-card p-1.5 shadow-(--shadow-card-hover) backdrop-blur-2xl backdrop-saturate-[1.8]">
         {list.map((item) => {
           const active = item.href === activeHref;
           return (
@@ -68,13 +68,13 @@ export function MobileBottomNav({ portal }: { portal: Portal }) {
                   <motion.span
                     layoutId="bottom-nav-active"
                     aria-hidden
-                    className="absolute inset-0 -z-10 rounded-xl bg-brand/12 ring-1 ring-brand/25"
+                    className="absolute inset-0 -z-10 rounded-xl bg-foreground/[0.07]"
                     transition={{ type: "spring", stiffness: 500, damping: 36 }}
                   />
                 ) : null}
                 <motion.span
                   key={active ? "on" : "off"}
-                  animate={active ? { y: [0, -4, 0], scale: [1, 1.15, 1] } : { y: 0, scale: 1 }}
+                  animate={active ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                   transition={{ duration: 0.45, ease: "easeOut" }}
                 >
                   <item.icon className={cn("size-5", active && "text-brand")} aria-hidden />

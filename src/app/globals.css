@@ -11,9 +11,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains-mono);
-  --font-heading: var(--font-inter);
+  --font-sans: var(--font-geist);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist);
 
   --color-brand: var(--brand);
   --color-success: var(--success);
@@ -58,8 +58,8 @@
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
   --radius-3xl: 1.25rem;
   --radius-4xl: 1.5rem;
 
@@ -121,30 +121,30 @@
 
 /* Light theme */
 :root {
-  --radius: 0.5rem;
+  --radius: 0.625rem;
   /* Brand indigo, nudged per theme so brand-coloured text meets WCAG AA. */
   --brand: #5b5ef0;
 
-  --background: #f4f5fb;
-  --foreground: #09090b;
-  /* Glass surfaces: translucent so the aurora backdrop shows through (blurred). */
-  --card: rgb(255 255 255 / 0.62);
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  /* Glass surfaces: translucent so the soft backdrop shows through (blurred). */
+  --card: rgb(255 255 255 / 0.72);
   --card-solid: #ffffff;
-  --card-foreground: #09090b;
-  --popover: rgb(255 255 255 / 0.86);
-  --popover-foreground: #09090b;
+  --card-foreground: #1d1d1f;
+  --popover: rgb(255 255 255 / 0.9);
+  --popover-foreground: #1d1d1f;
   /* #6366F1 with white text is 4.47:1; this slightly deeper indigo passes WCAG AA. */
   --primary: #5b5ef0;
   --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
+  --secondary: #ebebef;
+  --secondary-foreground: #1d1d1f;
+  --muted: #ececf0;
+  --muted-foreground: #6e6e73;
+  --accent: #ebebef;
+  --accent-foreground: #1d1d1f;
   --destructive: #dc2626;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
+  --border: rgb(0 0 0 / 0.08);
+  --input: rgb(0 0 0 / 0.12);
   --ring: #6366f1;
 
   --success: #10b981;
@@ -160,43 +160,48 @@
   --chart-4: #ef4444;
   --chart-5: #a1a1aa;
 
-  --sidebar: rgb(255 255 255 / 0.55);
-  --sidebar-foreground: #09090b;
+  --sidebar: rgb(250 250 252 / 0.7);
+  --sidebar-foreground: #1d1d1f;
   --sidebar-primary: #5b5ef0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #09090b;
-  --sidebar-border: #e4e4e7;
+  --sidebar-accent: rgb(0 0 0 / 0.05);
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: rgb(0 0 0 / 0.08);
   --sidebar-ring: #6366f1;
 
-  --glass-blur: 18px;
-  --glass-edge: rgb(255 255 255 / 0.7);
-  --aurora-a: rgb(91 94 240 / 0.22);
-  --aurora-b: rgb(14 165 233 / 0.16);
-  --aurora-c: rgb(16 185 129 / 0.12);
+  --glass-blur: 24px;
+  --glass-edge: rgb(255 255 255 / 0.8);
+  --shadow-card:
+    0 0 0 1px rgb(0 0 0 / 0.05), 0 1px 2px rgb(0 0 0 / 0.04), 0 10px 30px -14px rgb(0 0 0 / 0.12);
+  --shadow-card-hover:
+    0 0 0 1px rgb(0 0 0 / 0.07), 0 2px 4px rgb(0 0 0 / 0.05), 0 18px 40px -16px rgb(0 0 0 / 0.18);
+  /* One soft, muted wash behind everything. */
+  --backdrop:
+    radial-gradient(1100px 600px at 10% -10%, rgb(91 94 240 / 0.09), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(14 165 233 / 0.06), transparent 60%);
 }
 
 /* Dark theme (default) */
 .dark {
   --brand: #818cf8;
-  --background: #07070a;
-  --foreground: #fafafa;
-  --card: rgb(22 22 28 / 0.55);
-  --card-solid: #131317;
-  --card-foreground: #fafafa;
-  --popover: rgb(18 18 24 / 0.88);
-  --popover-foreground: #fafafa;
+  --background: #050506;
+  --foreground: #f5f5f7;
+  --card: rgb(28 28 30 / 0.62);
+  --card-solid: #1c1c1e;
+  --card-foreground: #f5f5f7;
+  --popover: rgb(30 30 33 / 0.9);
+  --popover-foreground: #f5f5f7;
   --primary: #5b5ef0;
   --primary-foreground: #ffffff;
-  --secondary: #18181b;
-  --secondary-foreground: #fafafa;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #1c1c20;
-  --accent-foreground: #fafafa;
+  --secondary: #2a2a2d;
+  --secondary-foreground: #f5f5f7;
+  --muted: #232326;
+  --muted-foreground: #98989d;
+  --accent: #2a2a2d;
+  --accent-foreground: #f5f5f7;
   --destructive: #ef4444;
-  --border: #1f1f23;
-  --input: #27272a;
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.12);
   --ring: #6366f1;
 
   --success: #10b981;
@@ -212,25 +217,31 @@
   --chart-4: #f87171;
   --chart-5: #52525b;
 
-  --sidebar: rgb(12 12 16 / 0.5);
-  --sidebar-foreground: #fafafa;
+  --sidebar: rgb(16 16 18 / 0.6);
+  --sidebar-foreground: #f5f5f7;
   --sidebar-primary: #5b5ef0;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #18181b;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #1f1f23;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
+  --sidebar-accent-foreground: #f5f5f7;
+  --sidebar-border: rgb(255 255 255 / 0.08);
   --sidebar-ring: #6366f1;
 
   --glass-edge: rgb(255 255 255 / 0.06);
-  --aurora-a: rgb(99 102 241 / 0.28);
-  --aurora-b: rgb(14 165 233 / 0.16);
-  --aurora-c: rgb(16 185 129 / 0.12);
+  --shadow-card:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.05), 0 0 0 1px rgb(255 255 255 / 0.07),
+    0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --shadow-card-hover:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.07), 0 0 0 1px rgb(255 255 255 / 0.11),
+    0 18px 40px -16px rgb(0 0 0 / 0.8);
+  --backdrop:
+    radial-gradient(1100px 600px at 10% -10%, rgb(99 102 241 / 0.13), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(14 165 233 / 0.06), transparent 60%);
 }
 
 /* Phones get a lighter blur: cheaper to paint, still reads as glass. */
 @media (max-width: 767px) {
   :root {
-    --glass-blur: 10px;
+    --glass-blur: 14px;
   }
 }
 
@@ -243,60 +254,24 @@ html[data-portal="admin"] {
   --sidebar-primary: #9333ea;
   --sidebar-ring: #a855f7;
   --chart-1: #a855f7;
-  --aurora-a: rgb(147 51 234 / 0.22);
-  --aurora-b: rgb(236 72 153 / 0.12);
-  --aurora-c: rgb(99 102 241 / 0.14);
+  --backdrop:
+    radial-gradient(1100px 600px at 10% -10%, rgb(147 51 234 / 0.08), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(99 102 241 / 0.06), transparent 60%);
 }
 .dark [data-portal="admin"],
 html.dark[data-portal="admin"] {
   --brand: #c084fc;
   --chart-1: #c084fc;
-  --aurora-a: rgb(168 85 247 / 0.26);
-  --aurora-b: rgb(236 72 153 / 0.12);
-  --aurora-c: rgb(99 102 241 / 0.16);
+  --backdrop:
+    radial-gradient(1100px 600px at 10% -10%, rgb(168 85 247 / 0.12), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgb(99 102 241 / 0.06), transparent 60%);
 }
 
 /* ---------- Dynamic UI effects (driven by components/fx) ---------- */
 
-/* Spotlight: a soft light that follows the pointer across a card. */
-[data-slot="card"][data-glow] {
-  background-image: radial-gradient(
-    420px circle at var(--mx, 50%) var(--my, 50%),
-    color-mix(in oklab, var(--brand) 12%, transparent),
-    transparent 45%
-  );
-}
-
-/* Click ripple on buttons. */
-.fx-ripple-host {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-  pointer-events: none;
-}
-.fx-ripple {
-  position: absolute;
-  border-radius: 9999px;
-  background: currentColor;
-  opacity: 0.2;
-  transform: scale(0);
-  animation: fx-ripple 600ms var(--ease-out-soft) forwards;
-}
-@keyframes fx-ripple {
-  to {
-    transform: scale(1);
-    opacity: 0;
-  }
-}
-
-/* Magnetic buttons ease back to rest. */
-[data-magnetic] {
-  transition:
-    transform 250ms var(--ease-out-soft),
-    background-color 150ms,
-    box-shadow 150ms;
-  will-change: transform;
+/* Press feedback: buttons give a little when pressed. */
+[data-slot="button"]:not(:disabled):active {
+  scale: 0.98;
 }
 
 /* Shimmer skeleton: a light band sweeping across. */
@@ -319,27 +294,27 @@ html.dark[data-portal="admin"] {
   mix-blend-mode: normal;
 }
 
-/* Text with a slow moving gradient (headings on auth and hero screens). */
+/* Kept for older markup: plain text now (no gradient). */
 .text-gradient {
-  background: linear-gradient(90deg, var(--brand), var(--success), var(--brand));
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 6s linear infinite;
+  color: inherit;
 }
 
-/* Lift-on-hover for interactive cards. */
+/* Soft lift for interactive tiles. */
 .hover-lift {
   transition:
     transform 200ms var(--ease-out-soft),
     box-shadow 200ms var(--ease-out-soft),
-    border-color 200ms;
+    background-color 200ms;
 }
 .hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px -12px color-mix(in oklab, var(--brand) 35%, transparent);
-  border-color: color-mix(in oklab, var(--brand) 35%, var(--border));
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+/* Toasts: glass. */
+[data-sonner-toast] {
+  backdrop-filter: blur(24px) saturate(1.8);
+  box-shadow: var(--shadow-card-hover) !important;
 }
 
 @layer base {
@@ -362,7 +337,25 @@ html.dark[data-portal="admin"] {
     /* A wide table or chart scrolls inside its own box, never the whole page. */
     overflow-x: clip;
     min-height: 100dvh;
-    font-feature-settings: "cv11", "ss01";
+    font-feature-settings: "kern", "calt";
+    letter-spacing: -0.006em;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 25%, transparent);
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 18%, transparent) transparent;
   }
   /*
    * Grid and flex children default to min-width: auto, so a wide table or chart inside a card
