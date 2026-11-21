@@ -105,26 +105,29 @@ export async function POST(request: Request) {
   }
 
   // Never trust the client's normalisation.
+  // Voice is optional: checked only when the user recorded a phrase.
   const [face, voice] = await Promise.all([
     admin.rpc("verify_face", {
       target_user: userId,
       query: toPgVector(normalize(faceEmbedding)),
     }),
-    admin.rpc("verify_voice", {
-      target_user: userId,
-      query: toPgVector(normalize(voiceEmbedding)),
-    }),
+    voiceEmbedding
+      ? admin.rpc("verify_voice", {
+          target_user: userId,
+          query: toPgVector(normalize(voiceEmbedding)),
+        })
+      : Promise.resolve({ data: null, error: null }),
   ]);
   if (face.error || voice.error) {
     return reply({ ok: false, error: "server", message: "Something went wrong." }, 500);
   }
   const faceScore = face.data ?? 0;
-  const voiceScore = voice.data ?? 0;
+  const voiceScore = voiceEmbedding ? (voice.data ?? 0) : null;
   const { success, reasons } = evaluateAttempt({
     livenessPassed,
     faceScore,
     voiceScore,
-    phraseScore,
+    phraseScore: voiceEmbedding ? phraseScore : null,
   });
 
   await admin.from("auth_attempts").insert({

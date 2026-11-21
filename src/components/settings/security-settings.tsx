@@ -68,8 +68,7 @@ export function SecuritySettings() {
   }
 
   const { enabled, linkedPerson, requirements, attempts } = status.data;
-  const ready =
-    requirements.linked && requirements.approved && requirements.face && requirements.voice;
+  const ready = requirements.linked && requirements.approved && requirements.face;
   const { faceMin, voice } = recognitionConfig.samples;
   const personHref = linkedPerson ? `/people/${linkedPerson.id}` : "/enroll";
 
@@ -79,8 +78,8 @@ export function SecuritySettings() {
         <CardHeader>
           <CardTitle>Biometric login</CardTitle>
           <CardDescription>
-            Sign in with email + liveness check + face + voice. A demo-grade second factor that runs
-            in your browser: your password and Google sign-in keep working.
+            Sign in with email + liveness check + face (+ voice, optional). A demo-grade second
+            factor that runs in your browser: your password and Google sign-in keep working.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-5">
@@ -137,17 +136,13 @@ export function SecuritySettings() {
             />
             <Requirement
               ok={requirements.voice}
-              label={`At least ${voice} voice samples`}
-              hint={linkedPerson ? `${linkedPerson.voice_samples} saved` : undefined}
-              action={
-                requirements.linked && !requirements.voice ? (
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={`/enroll?person=${linkedPerson!.id}&mode=voice`}>
-                      Add voice samples
-                    </Link>
-                  </Button>
-                ) : null
+              label={`Voice samples (optional, at least ${voice})`}
+              hint={
+                linkedPerson
+                  ? `${linkedPerson.voice_samples} saved${requirements.voice ? "" : ". Without them, sign-in uses face + liveness only."}`
+                  : undefined
               }
+              action={null}
             />
           </ul>
 

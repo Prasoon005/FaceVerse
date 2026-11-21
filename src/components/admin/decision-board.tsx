@@ -73,7 +73,7 @@ export function DecisionBoard({
   return (
     <div className="grid gap-4">
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           {tabs.map((t) => (
             <TabsTrigger key={t.value} value={t.value}>
               {t.label} ({items.filter((i) => t.statuses.includes(i.status)).length})

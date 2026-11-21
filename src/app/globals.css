@@ -258,12 +258,19 @@ html.dark[data-portal="admin"] {
   html {
     @apply font-sans;
     color-scheme: light;
+    /* Same text size on every device: stops Android/iOS "font boosting". */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
   html.dark {
     color-scheme: dark;
   }
   body {
     @apply bg-background text-foreground antialiased;
+    /* A wide table or chart scrolls inside its own box, never the whole page. */
+    overflow-x: clip;
+    min-height: 100dvh;
     font-feature-settings: "cv11", "ss01";
   }
   button:not(:disabled),

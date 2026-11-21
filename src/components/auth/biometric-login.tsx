@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, CircleX, Mic, RotateCw, ShieldCheck } from "lucide-react";
+import { ArrowRight, CircleX, Mic, RotateCw, ShieldCheck, SkipForward } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -36,7 +36,7 @@ const STEPS = [
   { id: "email", label: "Email" },
   { id: "liveness", label: "Liveness" },
   { id: "face", label: "Face" },
-  { id: "voice", label: "Voice" },
+  { id: "voice", label: "Voice", note: "optional" },
   { id: "success", label: "Success" },
 ];
 
@@ -88,7 +88,8 @@ export function BiometricLogin({ next }: { next: string }) {
     setPhrase(generatePhrase());
   }
 
-  async function submit(voice: VoiceSample) {
+  /** `voice` is null when the user skips voice (face + liveness only). */
+  async function submit(voice: VoiceSample | null) {
     if (!face) return;
     setSubmitting(true);
     setFailure(null);
@@ -99,9 +100,9 @@ export function BiometricLogin({ next }: { next: string }) {
         body: JSON.stringify({
           email,
           faceEmbedding: Array.from(face.embedding),
-          voiceEmbedding: Array.from(voice.embedding),
+          voiceEmbedding: voice ? Array.from(voice.embedding) : null,
           livenessPassed: true,
-          phraseScore: voice.phraseScore,
+          phraseScore: voice?.phraseScore ?? null,
         }),
       });
       const body = (await res.json()) as BiometricLoginResponse;
@@ -297,6 +298,9 @@ export function BiometricLogin({ next }: { next: string }) {
                   words.
                 </p>
               ) : null}
+              <Button variant="outline" className="w-full" onClick={() => void submit(null)}>
+                <SkipForward aria-hidden /> Skip voice, sign in with face only
+              </Button>
             </>
           )}
         </div>

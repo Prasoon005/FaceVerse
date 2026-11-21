@@ -33,6 +33,16 @@ describe("evaluateAttempt", () => {
     ).toEqual({ success: false, reasons: ["liveness", "face", "voice", "phrase"] });
   });
 
+  it("passes on face + liveness when voice is skipped, ignoring the phrase", () => {
+    expect(evaluateAttempt({ ...good, voiceScore: null, phraseScore: 0 })).toEqual({
+      success: true,
+      reasons: [],
+    });
+    expect(evaluateAttempt({ ...good, voiceScore: null, faceScore: 0.1 }).reasons).toEqual([
+      "face",
+    ]);
+  });
+
   it("rejects a different voice even when the face matches", () => {
     expect(evaluateAttempt({ ...good, voiceScore: voice.match - 0.01 }).reasons).toEqual(["voice"]);
   });

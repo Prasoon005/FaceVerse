@@ -55,7 +55,7 @@ export function ReviewBoard({ items }: { items: ReviewItem[] }) {
   return (
     <div className="grid gap-4">
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="answered">To decide ({count("answered")})</TabsTrigger>
           <TabsTrigger value="asked">Waiting for reply ({count("asked")})</TabsTrigger>
           <TabsTrigger value="decided">Decided ({count("decided")})</TabsTrigger>

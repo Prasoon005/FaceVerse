@@ -12,7 +12,8 @@ const embedding = (size: number) =>
 export const biometricLoginSchema = z.object({
   email: z.email().max(320),
   faceEmbedding: embedding(recognitionConfig.face.embeddingSize),
-  voiceEmbedding: embedding(recognitionConfig.voice.embeddingSize),
+  /** Optional: null when the user skipped voice (face + liveness only). */
+  voiceEmbedding: embedding(recognitionConfig.voice.embeddingSize).nullable(),
   livenessPassed: z.boolean(),
   /** Share of the challenge phrase heard by speech recognition; null when unsupported. */
   phraseScore: z.number().min(0).max(1).nullable(),
@@ -70,15 +71,21 @@ export type BiometricLoginResponse =
 export function evaluateAttempt(input: {
   livenessPassed: boolean;
   faceScore: number;
-  voiceScore: number;
+  /** null when voice was skipped; then neither voice nor phrase is checked. */
+  voiceScore: number | null;
   phraseScore: number | null;
 }): { success: boolean; reasons: FailureReason[] } {
   const reasons: FailureReason[] = [];
   if (!input.livenessPassed) reasons.push("liveness");
   if (input.faceScore < recognitionConfig.face.match) reasons.push("face");
-  if (input.voiceScore < recognitionConfig.voice.match) reasons.push("voice");
-  if (input.phraseScore !== null && input.phraseScore < recognitionConfig.voice.phraseMatchRatio) {
-    reasons.push("phrase");
+  if (input.voiceScore !== null) {
+    if (input.voiceScore < recognitionConfig.voice.match) reasons.push("voice");
+    if (
+      input.phraseScore !== null &&
+      input.phraseScore < recognitionConfig.voice.phraseMatchRatio
+    ) {
+      reasons.push("phrase");
+    }
   }
   return { success: reasons.length === 0, reasons };
 }

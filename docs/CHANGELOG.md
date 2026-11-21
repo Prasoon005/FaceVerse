@@ -3,6 +3,16 @@
 All notable changes to this project are documented here, grouped by build phase.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 4A, fixes] Optional voice — 2026-11-21
+
+### Changed
+
+- **Voice is optional.** My identity has a "Skip voice" button (face is still required), and
+  biometric login offers "Skip voice, sign in with face only" (liveness + face). If a user does
+  record a phrase, it must still match. Security settings list voice as optional.
+- On phones where speech recognition hears nothing (Android Chrome), the phrase is shown as
+  "words not checked" instead of failing at 0%.
+
 ## [Phase 4A, part 2] Admin portal, final identity, announcements, leave & kiosk — 2026-11-21
 
 Your "final idea" on top of part 1: two separate portals, a locked biometric identity, and the

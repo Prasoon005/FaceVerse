@@ -34,7 +34,7 @@ type StepId = "intro" | "face" | "voice" | "review" | "saving" | "done";
 const STEPS = [
   { id: "intro", label: "Start" },
   { id: "face", label: "Face" },
-  { id: "voice", label: "Voice" },
+  { id: "voice", label: "Voice", note: "optional" },
   { id: "review", label: "Confirm" },
   { id: "done", label: "Sent" },
 ];
@@ -145,6 +145,10 @@ export function IdentityWizard({ isChange }: { isChange: boolean }) {
           {step === "voice" ? (
             <VoiceCaptureStep
               onBack={() => setStep("face")}
+              onSkip={() => {
+                setVoices([]);
+                setStep("review");
+              }}
               onComplete={(captured) => {
                 setVoices(captured);
                 setStep("review");
@@ -180,17 +184,23 @@ export function IdentityWizard({ isChange }: { isChange: boolean }) {
                   <AudioLines className="size-4 text-brand" aria-hidden /> Voice samples
                   <span className="font-mono text-muted-foreground">({voices.length})</span>
                 </h3>
-                <ul className="grid gap-1.5">
-                  {voices.map((v, i) => (
-                    <li key={i} className="flex items-center gap-2 text-sm">
-                      <CircleCheck className="size-4 text-success-foreground" aria-hidden />
-                      <span className="truncate">&ldquo;{v.phrase.text}&rdquo;</span>
-                      <span className="ml-auto font-mono text-xs text-muted-foreground">
-                        {v.speechSeconds.toFixed(1)}s
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+                {voices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    Skipped (optional). Attendance and biometric login will use your face only.
+                  </p>
+                ) : (
+                  <ul className="grid gap-1.5">
+                    {voices.map((v, i) => (
+                      <li key={i} className="flex items-center gap-2 text-sm">
+                        <CircleCheck className="size-4 text-success-foreground" aria-hidden />
+                        <span className="truncate">&ldquo;{v.phrase.text}&rdquo;</span>
+                        <span className="ml-auto font-mono text-xs text-muted-foreground">
+                          {v.speechSeconds.toFixed(1)}s
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               <motion.div
@@ -255,7 +265,7 @@ export function IdentityWizard({ isChange }: { isChange: boolean }) {
 function Intro({ isChange, onStart }: { isChange: boolean; onStart: () => void }) {
   const items = [
     { icon: ScanFace, title: "Face", text: "3–5 photos from slightly different angles." },
-    { icon: AudioLines, title: "Voice", text: "Read 3 short phrases out loud." },
+    { icon: AudioLines, title: "Voice (optional)", text: "Read 3 short phrases, or skip it." },
     { icon: Lock, title: "Final lock", text: "Submitted once; changes need admin approval." },
     { icon: ShieldCheck, title: "Admin approval", text: "Your admin verifies it's really you." },
   ];
@@ -275,8 +285,8 @@ function Intro({ isChange, onStart }: { isChange: boolean; onStart: () => void }
           </h2>
           <p className="text-sm text-muted-foreground">
             {isChange
-              ? "Your admin approved a change. You can enroll your face and voice one more time; the old samples are replaced."
-              : "Your face and voice let you mark attendance and sign in without a password. Only numbers (embeddings) and one small thumbnail are stored."}
+              ? "Your admin approved a change. You can enroll your face (and optionally your voice) one more time; the old samples are replaced."
+              : "Your face lets you mark attendance and sign in without a password; voice is an optional extra check. Only numbers (embeddings) and one small thumbnail are stored."}
           </p>
         </div>
       </div>

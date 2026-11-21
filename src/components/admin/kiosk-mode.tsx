@@ -148,7 +148,7 @@ export function KioskMode({ timezone }: { timezone: string }) {
             </p>
           </div>
           <span
-            className="ml-auto font-mono text-3xl font-semibold tabular-nums"
+            className="ml-auto font-mono text-2xl font-semibold tabular-nums sm:text-3xl"
             aria-label="Current time"
           >
             {formatTimeIn(clock, timezone)}
@@ -214,7 +214,7 @@ export function KioskMode({ timezone }: { timezone: string }) {
                 aria-live="assertive"
               >
                 {result.kind === "success" ? (
-                  <div className="grid justify-items-center gap-3 rounded-2xl border border-success/40 bg-card/95 p-8 text-center shadow-2xl">
+                  <div className="grid justify-items-center gap-3 rounded-2xl border border-success/40 bg-card/95 p-5 text-center shadow-2xl sm:p-8">
                     <div className="relative">
                       {[0, 1, 2].map((ring) => (
                         <motion.span
@@ -226,12 +226,16 @@ export function KioskMode({ timezone }: { timezone: string }) {
                           transition={{ duration: 1.4, delay: ring * 0.25, repeat: Infinity }}
                         />
                       ))}
-                      <PersonAvatar name={result.name} url={result.avatarUrl} className="size-24" />
+                      <PersonAvatar
+                        name={result.name}
+                        url={result.avatarUrl}
+                        className="size-16 sm:size-24"
+                      />
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {result.action === "check_in" ? "Welcome" : "See you tomorrow"},
                     </p>
-                    <p className="text-3xl font-bold">{result.name}</p>
+                    <p className="text-2xl font-bold sm:text-3xl">{result.name}</p>
                     <p className="inline-flex items-center gap-2 rounded-full bg-success/15 px-3 py-1 text-sm font-medium text-success-foreground">
                       {result.action === "check_in" ? (
                         <LogIn className="size-4" aria-hidden />
@@ -243,7 +247,7 @@ export function KioskMode({ timezone }: { timezone: string }) {
                     </p>
                   </div>
                 ) : (
-                  <div className="grid max-w-sm justify-items-center gap-3 rounded-2xl border border-danger/40 bg-card/95 p-8 text-center shadow-2xl">
+                  <div className="grid max-w-sm justify-items-center gap-3 rounded-2xl border border-danger/40 bg-card/95 p-5 text-center shadow-2xl sm:p-8">
                     <motion.span
                       animate={{ x: [0, -8, 8, -5, 5, 0] }}
                       transition={{ duration: 0.5 }}

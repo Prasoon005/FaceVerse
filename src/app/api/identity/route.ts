@@ -19,10 +19,11 @@ const schema = z.object({
     )
     .min(samples.faceMin)
     .max(samples.faceMax + 1),
+  /** Optional: none (skipped) or the full set. */
   voiceSamples: z
     .array(z.array(finite).length(voice.embeddingSize))
-    .min(samples.voice)
-    .max(samples.voice + 2),
+    .max(samples.voice + 2)
+    .refine((v) => v.length === 0 || v.length >= samples.voice),
   /** Small JPEG face thumbnail as a data URL (≤ 300 KB). */
   thumbnail: z
     .string()
@@ -153,14 +154,16 @@ export async function POST(request: Request) {
       })),
     );
     if (faceError) throw faceError;
-    const { error: voiceError } = await admin.from("voice_embeddings").insert(
-      parsed.data.voiceSamples.map((embedding) => ({
-        person_id: personId,
-        owner_id: userId,
-        embedding: toPgVector(normalize(embedding)),
-      })),
-    );
-    if (voiceError) throw voiceError;
+    if (parsed.data.voiceSamples.length > 0) {
+      const { error: voiceError } = await admin.from("voice_embeddings").insert(
+        parsed.data.voiceSamples.map((embedding) => ({
+          person_id: personId,
+          owner_id: userId,
+          embedding: toPgVector(normalize(embedding)),
+        })),
+      );
+      if (voiceError) throw voiceError;
+    }
 
     let avatarPath = keep?.avatar_path ?? null;
     if (parsed.data.thumbnail) {

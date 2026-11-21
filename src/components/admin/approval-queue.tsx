@@ -55,7 +55,7 @@ export function ApprovalQueue({ items }: { items: ApprovalItem[] }) {
   return (
     <div className="grid gap-4">
       <Tabs value={tab} onValueChange={(v) => setTab(v as ApprovalStatus)}>
-        <TabsList>
+        <TabsList className="max-w-full justify-start overflow-x-auto">
           <TabsTrigger value="pending">Pending ({count("pending")})</TabsTrigger>
           <TabsTrigger value="approved">Approved ({count("approved")})</TabsTrigger>
           <TabsTrigger value="rejected">Rejected ({count("rejected")})</TabsTrigger>
