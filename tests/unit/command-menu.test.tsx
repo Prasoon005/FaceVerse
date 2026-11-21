@@ -6,6 +6,7 @@ import { useUiStore } from "@/stores/ui-store";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => "/dashboard",
 }));
 vi.mock("next-themes", () => ({
   useTheme: () => ({ resolvedTheme: "dark", setTheme: vi.fn() }),

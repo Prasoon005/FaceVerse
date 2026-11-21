@@ -18,7 +18,7 @@ export function Topbar({ user, portal }: { user: ShellUser; portal: Portal }) {
   const setCommandOpen = useUiStore((s) => s.setCommandOpen);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/40 px-4 backdrop-blur-xl backdrop-saturate-150 md:px-6">
       <Button
         variant="ghost"
         size="icon"

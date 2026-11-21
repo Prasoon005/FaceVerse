@@ -157,7 +157,7 @@ export function AttendanceReport({
             <tr className="border-b bg-muted/40">
               <th
                 scope="col"
-                className="sticky left-0 z-10 min-w-44 bg-card px-3 py-2 text-left font-medium"
+                className="sticky left-0 z-10 min-w-44 bg-card-solid px-3 py-2 text-left font-medium"
               >
                 User
               </th>
@@ -196,7 +196,7 @@ export function AttendanceReport({
               >
                 <th
                   scope="row"
-                  className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-normal"
+                  className="sticky left-0 z-10 bg-card-solid px-3 py-2 text-left font-normal"
                 >
                   <span className="block truncate font-medium">{row.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">

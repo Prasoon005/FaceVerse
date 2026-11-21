@@ -1,9 +1,13 @@
 import { ArrowRight, CalendarCheck, Fingerprint, Megaphone } from "lucide-react";
 import Link from "next/link";
 
+import { LiveClock } from "@/components/fx/live-clock";
+import { ProgressRing } from "@/components/fx/progress-ring";
+import { TiltCard } from "@/components/fx/tilt-card";
 import { StaggerList, StaggerListItem } from "@/components/shared/motion";
 import { getAttendanceSettings, getViewer } from "@/lib/admin/server";
-import { localDay } from "@/lib/attendance/days";
+import { localDay, monthRange } from "@/lib/attendance/days";
+import { loadUserDays } from "@/lib/attendance/user-days";
 import { formatTimeIn } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -26,8 +30,10 @@ export async function WelcomeHero() {
   const { supabase, user, profile } = viewer;
   const settings = await getAttendanceSettings(supabase);
   const today = localDay(new Date(), settings.timezone);
+  const { from } = monthRange(today);
+  const joinedDay = localDay(new Date(profile?.created_at ?? user.created_at), settings.timezone);
 
-  const [{ data: identity }, { data: record }, { data: announcements }, { data: reads }] =
+  const [{ data: identity }, { data: record }, { data: announcements }, { data: reads }, month] =
     await Promise.all([
       supabase
         .from("people")
@@ -49,7 +55,24 @@ export async function WelcomeHero() {
         .order("created_at", { ascending: false })
         .limit(50),
       supabase.from("announcement_reads").select("announcement_id").eq("user_id", user.id),
+      loadUserDays({
+        client: supabase,
+        userId: user.id,
+        joinedDay,
+        from,
+        to: today,
+        today,
+        settings,
+      }),
     ]);
+
+  // This month: share of working days attended (late still counts as attended), and the score.
+  const counted = month.days.filter((d) =>
+    ["present", "late", "absent", "excused", "pending"].includes(d.status),
+  );
+  const attended = counted.filter((d) => d.status === "present" || d.status === "late").length;
+  const rate = counted.length ? attended / counted.length : null;
+  const { score, base } = month.score;
 
   const readIds = new Set((reads ?? []).map((r) => r.announcement_id));
   const unread = (announcements ?? []).filter((a) => !readIds.has(a.id)).length;
@@ -91,7 +114,7 @@ export async function WelcomeHero() {
   };
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border bg-card p-5 sm:p-6">
+    <section className="relative overflow-hidden rounded-2xl border bg-card p-5 shadow-[inset_0_1px_0_0_var(--glass-edge)] backdrop-blur-(--glass-blur) sm:p-6">
       <div
         aria-hidden
         className="absolute -top-24 -right-16 size-72 animate-aurora rounded-full bg-brand/15 blur-3xl"
@@ -101,11 +124,14 @@ export async function WelcomeHero() {
         className="absolute -bottom-24 left-1/3 size-64 animate-aurora rounded-full bg-success/10 blur-3xl [animation-delay:-7s]"
       />
       <div className="relative grid gap-4">
-        <div className="grid gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-            {greeting(settings.timezone)}, <span className="text-gradient">{firstName}</span> 👋
-          </h1>
-          <p className="text-sm text-muted-foreground">Here&apos;s where you stand today.</p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="grid gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              {greeting(settings.timezone)}, <span className="text-gradient">{firstName}</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">Here&apos;s where you stand today.</p>
+          </div>
+          <LiveClock timeZone={settings.timezone} />
         </div>
         <StaggerList className="grid gap-2 sm:grid-cols-3">
           {chips.map((c) => (
@@ -126,6 +152,49 @@ export async function WelcomeHero() {
             </StaggerListItem>
           ))}
         </StaggerList>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <TiltCard max={5}>
+            <Link
+              href="/attendance"
+              className="flex h-full items-center gap-4 rounded-xl border bg-background/50 p-4 backdrop-blur transition-colors hover:border-brand/40"
+            >
+              <ProgressRing
+                ratio={rate}
+                value={rate === null ? null : Math.round(rate * 100)}
+                label="Attendance this month"
+              />
+              <span className="grid gap-0.5">
+                <span className="text-sm font-medium">Attendance this month</span>
+                <span className="text-xs text-muted-foreground">
+                  {rate === null
+                    ? "No working days yet this month"
+                    : `${attended} of ${counted.length} working days`}
+                </span>
+              </span>
+            </Link>
+          </TiltCard>
+          <TiltCard max={5}>
+            <Link
+              href="/reasons"
+              className="flex h-full items-center gap-4 rounded-xl border bg-background/50 p-4 backdrop-blur transition-colors hover:border-brand/40"
+            >
+              <ProgressRing
+                ratio={base ? score / base : null}
+                value={score}
+                suffix={`/${base}`}
+                label="Score this month"
+              />
+              <span className="grid gap-0.5">
+                <span className="text-sm font-medium">Score this month</span>
+                <span className="text-xs text-muted-foreground">
+                  {month.score.deducted
+                    ? `${month.score.deducted} points deducted`
+                    : "No deductions. Keep it up."}
+                </span>
+              </span>
+            </Link>
+          </TiltCard>
+        </div>
       </div>
     </section>
   );

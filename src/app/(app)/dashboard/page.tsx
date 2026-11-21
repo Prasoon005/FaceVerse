@@ -70,7 +70,7 @@ export default async function DashboardPage() {
         actions={
           <>
             <LiveUpdates tables={LIVE_TABLES} />
-            <Button asChild>
+            <Button asChild data-magnetic>
               <Link href="/enroll">
                 <UserPlus aria-hidden /> Enroll person
               </Link>

@@ -31,7 +31,7 @@ export function AbsentList({ entries }: { entries: AbsentEntry[] }) {
   const [target, setTarget] = useState<AskTarget | null>(null);
 
   if (entries.length === 0) {
-    return <EmptyState title="Nobody was absent" description="Everyone checked in. 🎉" />;
+    return <EmptyState title="Nobody was absent" description="Everyone checked in." />;
   }
 
   return (

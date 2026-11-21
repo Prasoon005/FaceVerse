@@ -1,13 +1,13 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useThemeTransition } from "@/lib/ui/theme-transition";
 
 export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+  const toggleTheme = useThemeTransition();
 
   return (
     <Tooltip>
@@ -17,11 +17,14 @@ export function ThemeToggle() {
           variant="ghost"
           size="icon"
           aria-label="Toggle theme"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          onClick={(e) => toggleTheme(e)}
         >
           {/* Both icons render; CSS picks one so there is no hydration mismatch. */}
-          <Sun className="hidden dark:block" aria-hidden />
-          <Moon className="block dark:hidden" aria-hidden />
+          <Sun
+            className="hidden transition-transform duration-500 dark:block dark:rotate-90"
+            aria-hidden
+          />
+          <Moon className="block transition-transform duration-500 dark:hidden" aria-hidden />
         </Button>
       </TooltipTrigger>
       <TooltipContent>Toggle theme</TooltipContent>

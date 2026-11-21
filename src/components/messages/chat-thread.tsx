@@ -121,7 +121,7 @@ export function ChatThread({
   }
 
   return (
-    <div className="flex h-[calc(100dvh-11rem)] min-h-[420px] flex-col overflow-hidden rounded-2xl border bg-card md:h-[calc(100dvh-10rem)]">
+    <div className="flex h-[calc(100dvh-16rem)] min-h-[380px] flex-col overflow-hidden rounded-2xl border bg-card backdrop-blur-(--glass-blur) md:h-[calc(100dvh-10rem)]">
       <div className="flex items-center gap-3 border-b px-4 py-3">{header}</div>
 
       <div className="flex-1 overflow-y-auto bg-muted/20 px-3 py-4 sm:px-4" aria-live="polite">

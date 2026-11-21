@@ -11,8 +11,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { AbsentList, type AbsentEntry } from "@/components/admin/absent-list";
+import { ActivityTicker, type TickerEvent } from "@/components/admin/activity-ticker";
 import { LiveUpdates } from "@/components/admin/live-updates";
 import { TodoStrip } from "@/components/admin/todo-strip";
+import { LiveClock } from "@/components/fx/live-clock";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Stagger, StaggerItem, StaggerList, StaggerListItem } from "@/components/shared/motion";
 import { PageHeader } from "@/components/shared/page-header";
@@ -34,8 +36,17 @@ const LIVE_TABLES = [
   "identity_change_requests",
 ];
 
+function greeting(timeZone: string) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-GB", { hour: "numeric", hour12: false, timeZone }).format(
+      new Date(),
+    ),
+  );
+  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+}
+
 export default async function AdminOverviewPage() {
-  const { admin } = await requireAdminPage();
+  const { admin, adminId } = await requireAdminPage();
   const settings = await getAttendanceSettings(admin);
   const today = localDay(new Date(), settings.timezone);
   const isWorkday = (day: string) => settings.work_days.includes(isoWeekday(day));
@@ -44,26 +55,36 @@ export default async function AdminOverviewPage() {
   let lastWorkday = addDays(today, -1);
   for (let i = 0; i < 7 && !isWorkday(lastWorkday); i++) lastWorkday = addDays(lastWorkday, -1);
 
-  const [allUsers, todayRows, lastRows, pending, reviews, leave, changeRequests, leaveRequests] =
-    await Promise.all([
-      listWorkspaceUsers(admin),
-      admin.from("attendance").select("user_id, check_in_at, check_out_at").eq("day", today),
-      admin.from("attendance").select("user_id").eq("day", lastWorkday),
-      admin
-        .from("people")
-        .select("id", { count: "exact", head: true })
-        .eq("approval_status", "pending"),
-      admin.from("absence_reviews").select("user_id, day, status"),
-      loadApprovedLeave(admin, lastWorkday, today),
-      admin
-        .from("identity_change_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-      admin
-        .from("leave_requests")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "pending"),
-    ]);
+  const [
+    allUsers,
+    todayRows,
+    lastRows,
+    pending,
+    reviews,
+    leave,
+    changeRequests,
+    leaveRequests,
+    { data: me },
+  ] = await Promise.all([
+    listWorkspaceUsers(admin),
+    admin.from("attendance").select("id, user_id, check_in_at, check_out_at").eq("day", today),
+    admin.from("attendance").select("user_id").eq("day", lastWorkday),
+    admin
+      .from("people")
+      .select("id", { count: "exact", head: true })
+      .eq("approval_status", "pending"),
+    admin.from("absence_reviews").select("user_id, day, status"),
+    loadApprovedLeave(admin, lastWorkday, today),
+    admin
+      .from("identity_change_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    admin
+      .from("leave_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending"),
+    admin.from("profiles").select("full_name").eq("id", adminId).maybeSingle(),
+  ]);
   // Admins have no attendance; everything below is about members.
   const users = allUsers.filter((u) => u.role === "member");
 
@@ -91,6 +112,18 @@ export default async function AdminOverviewPage() {
       day: lastWorkday,
       reviewStatus: reviewFor.get(u.id) ?? null,
     }));
+
+  // Seed the live feed with today's check-ins / check-outs (newest first).
+  const names = Object.fromEntries(users.map((u) => [u.id, u.name]));
+  const tickerSeed: TickerEvent[] = checkedIn
+    .flatMap((r) => [
+      { id: `in-${r.id}`, kind: "checkin" as const, userId: r.user_id, at: r.check_in_at },
+      ...(r.check_out_at
+        ? [{ id: `out-${r.id}`, kind: "checkout" as const, userId: r.user_id, at: r.check_out_at }]
+        : []),
+    ])
+    .sort((a, b) => b.at.localeCompare(a.at));
+  const firstName = (me?.full_name || "Admin").split(" ")[0];
 
   const onLeaveToday = active.filter((u) => leave.get(u.id)?.has(today)).length;
   const checkedInIds = new Set(checkedIn.map((r) => r.user_id));
@@ -145,9 +178,18 @@ export default async function AdminOverviewPage() {
   return (
     <div className="grid gap-6">
       <PageHeader
-        title="Admin overview"
+        title={
+          <>
+            {greeting(settings.timezone)}, <span className="text-gradient">{firstName}</span>
+          </>
+        }
         description="Everyone's attendance, approvals and absence reasons in one place."
-        actions={<LiveUpdates tables={LIVE_TABLES} />}
+        actions={
+          <>
+            <LiveClock timeZone={settings.timezone} className="hidden sm:inline-flex" />
+            <LiveUpdates tables={LIVE_TABLES} />
+          </>
+        }
       />
 
       <TodoStrip items={todos} />
@@ -160,7 +202,8 @@ export default async function AdminOverviewPage() {
         ))}
       </Stagger>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+        <ActivityTicker initial={tickerSeed} names={names} />
         <Card>
           <CardHeader>
             <CardTitle>Today&apos;s check-ins</CardTitle>
