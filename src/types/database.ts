@@ -1,7 +1,7 @@
 /**
  * Supabase database types.
  *
- * Hand-written to mirror supabase/migrations (0001–0006) in the same shape that
+ * Hand-written to mirror supabase/migrations (0001–0008) in the same shape that
  * `supabase gen types typescript` produces. Once your project is linked you can
  * regenerate it with:
  *   npx supabase gen types typescript --project-id <project-ref> > src/types/database.ts
@@ -271,11 +271,13 @@ export type Database = {
           answered_at: string | null;
           decided_at: string | null;
           created_at: string;
+          kind: ReviewKind;
         };
         Insert: {
           id?: string;
           user_id: string;
           day: string;
+          kind?: ReviewKind;
           status?: ReviewStatus;
           question?: string | null;
           reason?: string | null;
@@ -289,6 +291,7 @@ export type Database = {
           created_at?: string;
         };
         Update: {
+          kind?: ReviewKind;
           status?: ReviewStatus;
           question?: string | null;
           reason?: string | null;
@@ -303,9 +306,33 @@ export type Database = {
         Relationships: Rel[];
       };
       attendance_settings: {
-        Row: { id: number; work_days: number[]; timezone: string; updated_at: string };
+        Row: {
+          id: number;
+          work_days: number[];
+          timezone: string;
+          updated_at: string;
+          /** "HH:MM:SS" office start time. */
+          work_start: string;
+          late_grace_minutes: number;
+          score_base: number;
+          deduct_absent: number;
+          deduct_late: number;
+          deduct_excused: number;
+          deduct_late_excused: number;
+        };
         Insert: { id?: number; work_days?: number[]; timezone?: string; updated_at?: string };
-        Update: { work_days?: number[]; timezone?: string; updated_at?: string };
+        Update: {
+          work_days?: number[];
+          timezone?: string;
+          updated_at?: string;
+          work_start?: string;
+          late_grace_minutes?: number;
+          score_base?: number;
+          deduct_absent?: number;
+          deduct_late?: number;
+          deduct_excused?: number;
+          deduct_late_excused?: number;
+        };
         Relationships: [];
       };
       identity_change_requests: {
@@ -376,6 +403,40 @@ export type Database = {
         Row: { announcement_id: string; user_id: string; read_at: string };
         Insert: { announcement_id: string; user_id: string; read_at?: string };
         Update: Record<string, never>;
+        Relationships: Rel[];
+      };
+      visitor_logs: {
+        Row: {
+          id: string;
+          owner_id: string;
+          person_id: string;
+          purpose: string | null;
+          host_name: string | null;
+          phone: string | null;
+          check_in: string;
+          check_out: string | null;
+          snapshot_path: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          person_id: string;
+          purpose?: string | null;
+          host_name?: string | null;
+          phone?: string | null;
+          check_in?: string;
+          check_out?: string | null;
+          snapshot_path?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          purpose?: string | null;
+          host_name?: string | null;
+          phone?: string | null;
+          check_out?: string | null;
+          snapshot_path?: string | null;
+        };
         Relationships: Rel[];
       };
       leave_requests: {
@@ -463,6 +524,7 @@ export type Database = {
 
 export type ApprovalStatus = "pending" | "approved" | "rejected";
 export type ReviewStatus = "asked" | "answered" | "approved" | "rejected";
+export type ReviewKind = "absence" | "late";
 export type ChangeRequestStatus = "pending" | "approved" | "rejected" | "completed" | "cancelled";
 export type AnnouncementPriority = "normal" | "important" | "urgent";
 export type LeaveKind = "casual" | "sick" | "personal" | "other";
@@ -488,3 +550,4 @@ export type AttendanceSettings = Tables<"attendance_settings">;
 export type IdentityChangeRequest = Tables<"identity_change_requests">;
 export type Announcement = Tables<"announcements">;
 export type LeaveRequest = Tables<"leave_requests">;
+export type VisitorLog = Tables<"visitor_logs">;

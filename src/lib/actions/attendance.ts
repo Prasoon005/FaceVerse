@@ -6,26 +6,29 @@ import { z } from "zod";
 
 import { getAttendanceSettings, getViewer } from "@/lib/admin/server";
 import { isValidDay, localDay } from "@/lib/attendance/days";
+import { lateMinutes } from "@/lib/attendance/score";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import type { ActionResult } from "./admin";
 
 const answerSchema = z.object({
   day: z.string().refine(isValidDay, "Invalid day."),
+  /** "absence" (no check-in that day) or "late" (checked in after the grace period). */
+  kind: z.enum(["absence", "late"]).default("absence"),
   reason: z.string().trim().min(3, "Please write a short reason.").max(1000),
   proofPath: z.string().max(300).nullable().optional(),
 });
 
 /**
- * Answers an admin's question about an absence, or explains an absence unasked. Allowed
- * only for the caller's own past days without a check-in that haven't been decided yet.
+ * Answers an admin's question, or explains unasked: an absence (own past day without a
+ * check-in) or a late arrival (own day with a late check-in). Not after it's been decided.
  */
 export async function answerAbsence(input: z.input<typeof answerSchema>): Promise<ActionResult> {
   const viewer = await getViewer();
   if (!viewer || viewer.profile?.disabled) return { ok: false, error: "Please sign in again." };
   const parsed = answerSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
-  const { day, reason, proofPath } = parsed.data;
+  const { day, kind, reason, proofPath } = parsed.data;
   const userId = viewer.user.id;
 
   // Proofs must live in the caller's own folder of the private bucket.
@@ -40,11 +43,17 @@ export async function answerAbsence(input: z.input<typeof answerSchema>): Promis
   }
   const { data: present } = await admin
     .from("attendance")
-    .select("id")
+    .select("id, check_in_at")
     .eq("user_id", userId)
     .eq("day", day)
     .maybeSingle();
-  if (present) return { ok: false, error: "You were present that day." };
+  if (kind === "absence" && present) return { ok: false, error: "You were present that day." };
+  if (kind === "late") {
+    if (!present) return { ok: false, error: "There's no check-in on that day." };
+    if (lateMinutes(present.check_in_at, settings) === 0) {
+      return { ok: false, error: "You weren't late that day." };
+    }
+  }
 
   const { data: existing } = await admin
     .from("absence_reviews")
@@ -60,11 +69,18 @@ export async function answerAbsence(input: z.input<typeof answerSchema>): Promis
   const { error } = existing
     ? await admin
         .from("absence_reviews")
-        .update({ status: "answered", reason, proof_path: proofPath ?? null, answered_at: now })
+        .update({
+          kind,
+          status: "answered",
+          reason,
+          proof_path: proofPath ?? null,
+          answered_at: now,
+        })
         .eq("id", existing.id)
     : await admin.from("absence_reviews").insert({
         user_id: userId,
         day,
+        kind,
         status: "answered",
         reason,
         proof_path: proofPath ?? null,
@@ -74,9 +90,9 @@ export async function answerAbsence(input: z.input<typeof answerSchema>): Promis
 
   await admin.from("audit_logs").insert({
     actor_id: userId,
-    action: "attendance.answer_absence",
+    action: kind === "late" ? "attendance.answer_late" : "attendance.answer_absence",
     target_id: existing?.id ?? null,
-    meta: { day },
+    meta: { day, kind },
   });
   refresh();
   return { ok: true };

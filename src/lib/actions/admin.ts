@@ -197,12 +197,16 @@ export async function askAbsenceReason(input: {
   userId: string;
   day: string;
   question?: string;
+  kind?: "absence" | "late";
 }): Promise<ActionResult> {
   const userId = uuid.parse(input.userId);
   if (!isValidDay(input.day)) return { ok: false, error: "Invalid day." };
+  const kind = z.enum(["absence", "late"]).parse(input.kind ?? "absence");
   const question =
     z.string().trim().max(500).optional().parse(input.question) ||
-    "You were marked absent on this day. Please share the reason.";
+    (kind === "late"
+      ? "You checked in late on this day. Please share the reason."
+      : "You were marked absent on this day. Please share the reason.");
   return run("admin.ask_absence_reason", userId, async ({ admin, adminId }) => {
     const { data: existing } = await admin
       .from("absence_reviews")
@@ -217,18 +221,19 @@ export async function askAbsenceReason(input: {
     const { error } = existing
       ? await admin
           .from("absence_reviews")
-          .update({ question, asked_by: adminId, asked_at: now })
+          .update({ kind, question, asked_by: adminId, asked_at: now })
           .eq("id", existing.id)
       : await admin.from("absence_reviews").insert({
           user_id: userId,
           day: input.day,
+          kind,
           status: "asked",
           question,
           asked_by: adminId,
           asked_at: now,
         });
     if (error) throw error;
-    return { day: input.day };
+    return { day: input.day, kind };
   });
 }
 
@@ -366,4 +371,46 @@ export async function decideLeave(input: {
       };
     },
   );
+}
+
+const rulesSchema = z.object({
+  workStart: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use HH:MM, e.g. 09:30."),
+  lateGraceMinutes: z.number().int().min(0).max(240),
+  scoreBase: z.number().int().min(1).max(1000),
+  deductAbsent: z.number().min(0).max(1000),
+  deductLate: z.number().min(0).max(1000),
+  deductExcused: z.number().min(0).max(1000),
+  deductLateExcused: z.number().min(0).max(1000),
+});
+
+/** Office hours (for "late") and the deduction score rules. */
+export async function updateScoringRules(
+  input: z.input<typeof rulesSchema>,
+): Promise<ActionResult> {
+  const parsed = rulesSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid." };
+  const r = parsed.data;
+  return run("admin.update_scoring_rules", null, async ({ admin }) => {
+    const { error } = await admin
+      .from("attendance_settings")
+      .update({
+        work_start: r.workStart,
+        late_grace_minutes: r.lateGraceMinutes,
+        score_base: r.scoreBase,
+        deduct_absent: r.deductAbsent,
+        deduct_late: r.deductLate,
+        deduct_excused: r.deductExcused,
+        deduct_late_excused: r.deductLateExcused,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+    if (error) throw error;
+    return {
+      work_start: r.workStart,
+      grace: r.lateGraceMinutes,
+      base: r.scoreBase,
+      absent: r.deductAbsent,
+      late: r.deductLate,
+    };
+  });
 }

@@ -3,13 +3,13 @@ import {
   AudioLines,
   CalendarCheck,
   CalendarRange,
+  Gauge,
   Lock,
   LockOpen,
   Mail,
   Percent,
   ScanFace,
   ShieldCheck,
-  Users,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -37,6 +37,7 @@ import {
   localDay,
   summarize,
 } from "@/lib/attendance/days";
+import { computeScore, lateMinutes } from "@/lib/attendance/score";
 import { formatDay, formatDateTime, formatRelative, formatTimeIn } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -95,20 +96,34 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
   const joinedDay = localDay(new Date(user.joinedAt), settings.timezone);
   const leaveDays = leaveMap.get(id) ?? new Set<string>();
 
-  const cells = eachDay(from, today).map((day) => ({
-    day,
-    status: dayStatus({
+  const cells = eachDay(from, today).map((day) => {
+    const record = byDay.get(day) ?? null;
+    const review = reviewByDay.get(day) ?? null;
+    const lateBy = record ? lateMinutes(record.check_in_at, settings) : 0;
+    return {
       day,
-      today,
-      joinedDay,
-      workDays: settings.work_days,
-      attendance: byDay.get(day) ?? null,
-      review: reviewByDay.get(day) ?? null,
-      onLeave: leaveDays.has(day),
-    }),
-  }));
+      lateBy,
+      reviewStatus: review?.status ?? null,
+      status: dayStatus({
+        day,
+        today,
+        joinedDay,
+        workDays: settings.work_days,
+        attendance: record,
+        review,
+        onLeave: leaveDays.has(day),
+        late: lateBy > 0,
+      }),
+    };
+  });
   const summary = summarize(cells.map((c) => c.status));
   const rate = attendanceRate(summary);
+  // This month's deduction score (company norms).
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const monthScore = computeScore(
+    cells.filter((c) => c.day >= monthStart),
+    settings,
+  );
 
   const cards = [
     {
@@ -116,7 +131,14 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
       value: rate === null ? "–" : `${Math.round(rate * 100)}%`,
       icon: Percent,
       tone: "success",
-      hint: `${summary.present} present · ${summary.absent} absent`,
+      hint: `${summary.present + summary.late} present (${summary.late} late) · ${summary.absent} absent`,
+    },
+    {
+      label: "Score this month",
+      value: `${monthScore.score}/${monthScore.base}`,
+      icon: Gauge,
+      tone: monthScore.score / monthScore.base >= 0.85 ? "success" : "danger",
+      hint: `−${monthScore.deducted} deducted · ${monthScore.pending} under review`,
     },
     {
       label: "Leave days",
@@ -124,13 +146,6 @@ export default async function AdminUserPage({ params }: PageProps<"/admin/users/
       icon: CalendarRange,
       tone: "default",
       hint: "Approved, same period",
-    },
-    {
-      label: "People enrolled",
-      value: user.peopleCount,
-      icon: Users,
-      tone: "default",
-      hint: "In their own recognition list",
     },
     {
       label: "Last sign-in",

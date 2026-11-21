@@ -18,7 +18,13 @@ import { useServerAction } from "@/hooks/use-server-action";
 import { askAbsenceReason } from "@/lib/actions/admin";
 import { formatDay } from "@/lib/format";
 
-export type AskTarget = { userId: string; name: string; day: string };
+export type AskTarget = {
+  userId: string;
+  name: string;
+  day: string;
+  kind?: "absence" | "late";
+  lateBy?: number;
+};
 
 /** Admin asks a user why they were absent; the user is notified live. */
 export function AskReasonDialog({
@@ -39,8 +45,10 @@ export function AskReasonDialog({
             <DialogHeader>
               <DialogTitle>Ask {target.name} for a reason</DialogTitle>
               <DialogDescription>
-                Absent on {formatDay(target.day, { weekday: "long" })}. They&apos;ll get a
-                notification and can reply with a reason and proof.
+                {target.kind === "late"
+                  ? `Late on ${formatDay(target.day, { weekday: "long" })}${target.lateBy ? ` by ${target.lateBy} min` : ""}.`
+                  : `Absent on ${formatDay(target.day, { weekday: "long" })}.`}{" "}
+                They&apos;ll get a notification and can reply with a reason and proof.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-2">
@@ -51,7 +59,11 @@ export function AskReasonDialog({
                 maxLength={500}
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                placeholder="You were marked absent on this day. Please share the reason."
+                placeholder={
+                  target.kind === "late"
+                    ? "You checked in late on this day. Please share the reason."
+                    : "You were marked absent on this day. Please share the reason."
+                }
               />
             </div>
             <DialogFooter>
@@ -67,6 +79,7 @@ export function AskReasonDialog({
                       askAbsenceReason({
                         userId: target.userId,
                         day: target.day,
+                        kind: target.kind ?? "absence",
                         question: question || undefined,
                       }),
                     {

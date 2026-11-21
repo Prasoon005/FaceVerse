@@ -3,6 +3,24 @@
 All notable changes to this project are documented here, grouped by build phase.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [Phase 4B] Smart visitor log — 2026-11-21
+
+### Added
+
+- **Migration `0007_visitors.sql`:** `visitor_logs` (owner-scoped RLS, admins read all, one
+  open visit per visitor), private `visitor-snapshots` bucket, Realtime.
+- **Visitors page:** scan modal (recognised → history + one-click check-in/out; uncertain →
+  confirm; unknown → quick register form), flagged warning, optional snapshot, live stats,
+  filters, check-out, CSV export with a UTF-8 BOM for Excel, phone cards / desktop table.
+- Reusable one-shot `FaceScanner` camera component.
+- Real "Visitors today" on the dashboard (live), visitor check-ins in the bell, and an admin
+  Visitors page.
+- **Late arrivals, reasons & deduction score** (migration `0008_late_and_score.sql`): office start
+  time + grace in Workspace settings, a **Late (T)** day status, a user **Reasons & score** page
+  for absent and late days, late reasons in admin reviews, and a monthly score (start 100, −10
+  absent, −2 late without an approved reason; all configurable) on the reasons page, the
+  attendance report (and CSV) and the user detail page.
+
 ## [Phase 4A, fixes] Optional voice — 2026-11-21
 
 ### Changed

@@ -46,7 +46,7 @@ export async function getDashboardData() {
   const dayAgo = new Date(now.getTime() - DAY_MS).toISOString();
   const chartStart = new Date(now.getTime() - CHART_DAYS * DAY_MS).toISOString();
 
-  const [people, recognised, unknown, series, recent] = await Promise.all([
+  const [people, recognised, unknown, series, recent, visitors] = await Promise.all([
     supabase.from("people").select("id", { count: "exact", head: true }).eq("owner_id", ownerId),
     supabase
       .from("recognition_events")
@@ -73,6 +73,11 @@ export async function getDashboardData() {
       .eq("owner_id", ownerId)
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("visitor_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", ownerId)
+      .gte("check_in", dayAgo),
   ]);
 
   return {
@@ -80,7 +85,7 @@ export async function getDashboardData() {
       people: people.count ?? 0,
       recognisedToday: recognised.count ?? 0,
       unknownToday: unknown.count ?? 0,
-      visitorsToday: 0, // visitor log arrives in Phase 4
+      visitorsToday: visitors.count ?? 0,
     },
     series: bucketByDay(series.data ?? [], now),
     activity: (recent.data ?? []).map<ActivityItem>((e) => ({

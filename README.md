@@ -27,8 +27,8 @@ Author: [Prasoon Katiyar](https://github.com/Prasoon005)
 | 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done  |
 | 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
 | 4A    | Admin portal, final identity, attendance, leave, kiosk     | ✅ Built |
-| 4B    | Smart visitor log                                          | ⏳ Next  |
-| 5     | Event photo finder                                         | Planned  |
+| 4B    | Smart visitor log                                          | ✅ Built |
+| 5     | Event photo finder                                         | ⏳ Next  |
 | 6     | Privacy, polish & v1 release                               | Planned  |
 | 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | Planned  |
 
@@ -36,6 +36,14 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 [docs/phases/](docs/phases/) for each phase's test checklist.
 
 ## Features
+
+**Phase 4B: smart visitor log**
+
+- **Scan visitor:** returning visitors are recognised and checked in with one click (history and
+  last details pre-filled); new visitors get a quick form and are recognised next time
+- Check-in / check-out, flagged-person warning, optional private snapshot
+- Visitor log with date / status / search filters, CSV export for Excel, live dashboard and bell
+- Admins see every user's visitor log
 
 **Phase 4A: admin portal + attendance**
 
@@ -98,7 +106,7 @@ See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
 - `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
 - CI: lint, format check, typecheck and unit tests on every push/PR
 
-**Coming next:** visitor log (Phase 4B), event photo finder (Phase 5).
+**Coming next:** event photo finder (Phase 5).
 
 ## Tech stack
 

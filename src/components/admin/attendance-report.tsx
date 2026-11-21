@@ -34,12 +34,25 @@ export type ReportRow = {
     checkInAt: string | null;
     checkOutAt: string | null;
     reviewStatus: ReviewStatus | null;
+    lateBy: number;
   }[];
   summary: StatusSummary;
   rate: number | null;
+  /** Deduction score over the selected range (company norms). */
+  score: number;
+  scoreBase: number;
 };
 
-const LEGEND: DayStatus[] = ["present", "absent", "leave", "excused", "pending", "off", "today"];
+const LEGEND: DayStatus[] = [
+  "present",
+  "late",
+  "absent",
+  "leave",
+  "excused",
+  "pending",
+  "off",
+  "today",
+];
 
 /** Users × days grid with a legend, date-range filter, CSV export and "Ask reason". */
 export function AttendanceReport({
@@ -61,20 +74,33 @@ export function AttendanceReport({
   const [target, setTarget] = useState<AskTarget | null>(null);
 
   function exportCsv() {
-    const header = ["Name", "Email", ...days, "Present", "Absent", "Excused", "Pending", "Rate"];
+    const header = [
+      "Name",
+      "Email",
+      ...days,
+      "Present",
+      "Late",
+      "Absent",
+      "Excused",
+      "Pending",
+      "Rate",
+      "Score",
+    ];
     const body = rows.map((r) => [
       r.name,
       r.email,
       ...r.cells.map((c) =>
-        c.status === "present"
-          ? `P ${formatTimeIn(c.checkInAt, timezone)}-${c.checkOutAt ? formatTimeIn(c.checkOutAt, timezone) : ""}`
+        c.status === "present" || c.status === "late"
+          ? `${dayStatusCodes[c.status]} ${formatTimeIn(c.checkInAt, timezone)}-${c.checkOutAt ? formatTimeIn(c.checkOutAt, timezone) : ""}`
           : dayStatusCodes[c.status],
       ),
       r.summary.present,
+      r.summary.late,
       r.summary.absent,
       r.summary.excused,
       r.summary.pending,
       r.rate == null ? "" : `${Math.round(r.rate * 100)}%`,
+      `${r.score}/${r.scoreBase}`,
     ]);
     const blob = new Blob(["﻿" + toCsv([header, ...body])], {
       type: "text/csv;charset=utf-8",
@@ -154,6 +180,9 @@ export function AttendanceReport({
               <th scope="col" className="px-3 py-2 text-right font-medium">
                 Rate
               </th>
+              <th scope="col" className="px-3 py-2 text-right font-medium">
+                Score
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -171,16 +200,19 @@ export function AttendanceReport({
                 >
                   <span className="block truncate font-medium">{row.name}</span>
                   <span className="block truncate text-xs text-muted-foreground">
-                    {row.summary.present}P · {row.summary.absent}A · {row.summary.excused}E
+                    {row.summary.present}P · {row.summary.late}T · {row.summary.absent}A ·{" "}
+                    {row.summary.excused}E
                   </span>
                 </th>
                 {row.cells.map((cell) => {
                   const label = `${row.name}, ${formatDay(cell.day)}: ${dayStatusLabels[cell.status]}${
                     cell.checkInAt
-                      ? ` (in ${formatTimeIn(cell.checkInAt, timezone)}${cell.checkOutAt ? `, out ${formatTimeIn(cell.checkOutAt, timezone)}` : ""})`
+                      ? ` (in ${formatTimeIn(cell.checkInAt, timezone)}${cell.lateBy ? `, ${cell.lateBy} min late` : ""}${cell.checkOutAt ? `, out ${formatTimeIn(cell.checkOutAt, timezone)}` : ""})`
                       : ""
                   }`;
-                  const askable = cell.status === "absent" && cell.reviewStatus === null;
+                  const askable =
+                    (cell.status === "absent" || cell.status === "late") &&
+                    cell.reviewStatus === null;
                   return (
                     <td key={cell.day} className="p-0.5 text-center">
                       {askable ? (
@@ -189,7 +221,13 @@ export function AttendanceReport({
                           title={`${label}. Click to ask for a reason.`}
                           aria-label={`${label}. Ask for a reason`}
                           onClick={() =>
-                            setTarget({ userId: row.userId, name: row.name, day: cell.day })
+                            setTarget({
+                              userId: row.userId,
+                              name: row.name,
+                              day: cell.day,
+                              kind: cell.status === "late" ? "late" : "absence",
+                              lateBy: cell.lateBy,
+                            })
                           }
                           className={cn(
                             "grid size-7 place-items-center rounded border text-[10px] font-semibold transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
@@ -215,6 +253,18 @@ export function AttendanceReport({
                 })}
                 <td className="px-3 py-2 text-right font-mono tabular-nums">
                   {formatPercent(row.rate)}
+                </td>
+                <td
+                  className={cn(
+                    "px-3 py-2 text-right font-mono font-semibold tabular-nums",
+                    row.score / row.scoreBase >= 0.95
+                      ? "text-success-foreground"
+                      : row.score / row.scoreBase >= 0.7
+                        ? "text-warning-foreground"
+                        : "text-danger-foreground",
+                  )}
+                >
+                  {row.score}
                 </td>
               </motion.tr>
             ))}

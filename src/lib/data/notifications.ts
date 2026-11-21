@@ -9,6 +9,7 @@ export type NotificationKind =
   | "announcement"
   | "identity-change"
   | "leave"
+  | "visitor"
   | "admin-approvals"
   | "admin-replies"
   | "admin-changes"
@@ -32,7 +33,7 @@ async function memberNotifications(userId: string, since: string): Promise<Notif
   const [reviews, linked, changes, leaves, announcements, reads] = await Promise.all([
     supabase
       .from("absence_reviews")
-      .select("id, day, status, question, decided_at, asked_at, decision_note")
+      .select("id, day, kind, status, question, decided_at, asked_at, decision_note")
       .eq("user_id", userId)
       .or(`status.eq.asked,decided_at.gte.${since}`)
       .order("created_at", { ascending: false })
@@ -64,6 +65,13 @@ async function memberNotifications(userId: string, since: string): Promise<Notif
       .limit(20),
     supabase.from("announcement_reads").select("announcement_id").eq("user_id", userId),
   ]);
+  const { data: visits } = await supabase
+    .from("visitor_logs")
+    .select("id, check_in, purpose")
+    .eq("owner_id", userId)
+    .gte("check_in", new Date(Date.now() - 24 * 3600 * 1000).toISOString())
+    .order("check_in", { ascending: false })
+    .limit(20);
 
   const items: NotificationItem[] = [];
   for (const r of reviews.data ?? []) {
@@ -71,9 +79,9 @@ async function memberNotifications(userId: string, since: string): Promise<Notif
       items.push({
         id: `q-${r.id}`,
         kind: "question",
-        title: `Reason needed for ${r.day}`,
-        body: r.question ?? "Your admin asked why you were absent.",
-        href: "/attendance",
+        title: r.kind === "late" ? `Reason needed: late on ${r.day}` : `Reason needed for ${r.day}`,
+        body: r.question ?? "Your admin asked for a reason.",
+        href: "/reasons",
         at: r.asked_at,
         actionable: true,
       });
@@ -82,11 +90,13 @@ async function memberNotifications(userId: string, since: string): Promise<Notif
         id: `d-${r.id}`,
         kind: "decision",
         title:
-          r.status === "approved" ? `Absence on ${r.day} excused` : `Reason for ${r.day} rejected`,
+          r.status === "approved"
+            ? `${r.kind === "late" ? "Late arrival" : "Absence"} on ${r.day} excused`
+            : `Reason for ${r.day} rejected`,
         body:
           r.decision_note ??
           (r.status === "approved" ? "Your admin approved it." : "It stays as absent."),
-        href: `/attendance?month=${r.day.slice(0, 7)}`,
+        href: `/reasons?month=${r.day.slice(0, 7)}`,
         at: r.decided_at,
         actionable: false,
       });
@@ -136,6 +146,17 @@ async function memberNotifications(userId: string, since: string): Promise<Notif
         (l.status === "approved" ? "Enjoy your time off!" : "Contact your admin."),
       href: "/leave",
       at: l.decided_at,
+      actionable: false,
+    });
+  }
+  if (visits && visits.length > 0) {
+    items.push({
+      id: `v-${visits[0]!.id}`,
+      kind: "visitor",
+      title: `${visits.length} visitor check-in${visits.length === 1 ? "" : "s"} today`,
+      body: visits[0]!.purpose ? `Latest: ${visits[0]!.purpose}` : "See the visitor log.",
+      href: "/visitors",
+      at: visits[0]!.check_in,
       actionable: false,
     });
   }

@@ -60,9 +60,10 @@ export function AttendanceCalendar({
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${month}-01T00:00:00Z`));
+  const isLateDay = (detail?.lateBy ?? 0) > 0;
   const canExplain =
     detail !== null &&
-    (detail.status === "absent" || detail.status === "pending") &&
+    (detail.status === "absent" || detail.status === "pending" || detail.status === "late") &&
     detail.review?.status !== "rejected";
 
   return (
@@ -177,6 +178,12 @@ export function AttendanceCalendar({
                   <span className="font-mono text-foreground">
                     {formatTimeIn(detail.checkOutAt, timezone)}
                   </span>
+                  {isLateDay ? (
+                    <span className="text-orange-600 dark:text-orange-300">
+                      {" "}
+                      · {detail.lateBy} min late
+                    </span>
+                  ) : null}
                 </p>
               ) : null}
               {detail.review ? (
@@ -203,7 +210,11 @@ export function AttendanceCalendar({
                   onClick={() => setExplaining(true)}
                 >
                   <MessageSquareText aria-hidden />
-                  {detail.review?.reason ? "Update reason" : "Explain absence"}
+                  {detail.review?.reason
+                    ? "Update reason"
+                    : isLateDay
+                      ? "Explain late arrival"
+                      : "Explain absence"}
                 </Button>
               ) : null}
             </motion.div>
@@ -219,6 +230,8 @@ export function AttendanceCalendar({
           day={detail.day}
           question={detail.review?.question}
           initialReason={detail.review?.reason}
+          kind={isLateDay ? "late" : "absence"}
+          lateBy={detail.lateBy}
         />
       ) : null}
     </Card>

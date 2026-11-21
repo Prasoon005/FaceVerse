@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, FileText, Hourglass, ImageIcon, X } from "lucide-react";
+import { AlarmClock, Check, FileText, Hourglass, ImageIcon, X } from "lucide-react";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/shared/empty-state";
@@ -14,13 +14,16 @@ import { useServerAction } from "@/hooks/use-server-action";
 import { decideAbsence } from "@/lib/actions/admin";
 import { formatDay, formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { ReviewStatus } from "@/types/database";
+import type { ReviewKind, ReviewStatus } from "@/types/database";
 
 export type ReviewItem = {
   id: string;
   name: string;
   email: string;
   day: string;
+  kind: ReviewKind;
+  /** Minutes late, for late-arrival reasons. */
+  lateBy: number;
   status: ReviewStatus;
   question: string | null;
   reason: string | null;
@@ -108,8 +111,23 @@ function ReviewCard({ item }: { item: ReviewItem }) {
           {badge.label}
         </Badge>
       </header>
-      <p className="text-sm">
-        Absent on <span className="font-medium">{formatDay(item.day, { weekday: "long" })}</span>
+      <p className="flex flex-wrap items-center gap-2 text-sm">
+        <Badge
+          variant="outline"
+          className={
+            item.kind === "late"
+              ? "border-orange-500/40 text-orange-600 dark:text-orange-300"
+              : "border-danger/40 text-danger-foreground"
+          }
+        >
+          {item.kind === "late" ? <AlarmClock className="size-3" aria-hidden /> : null}
+          {item.kind === "late" ? "Late" : "Absent"}
+        </Badge>
+        {item.kind === "late" ? "Came late" : "Absent"} on{" "}
+        <span className="font-medium">{formatDay(item.day, { weekday: "long" })}</span>
+        {item.kind === "late" && item.lateBy > 0 ? (
+          <span className="font-mono text-xs text-muted-foreground">({item.lateBy} min)</span>
+        ) : null}
       </p>
       {item.question ? (
         <p className="rounded-lg bg-muted/50 p-2 text-sm text-muted-foreground">

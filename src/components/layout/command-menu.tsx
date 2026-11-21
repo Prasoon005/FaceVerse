@@ -35,6 +35,7 @@ const quickActions: Record<Portal, { label: string; href: string; icon: typeof R
     { label: "Start live scan", href: "/live", icon: Radar },
     { label: "Enroll new person", href: "/enroll", icon: UserPlus },
     { label: "Request leave", href: "/leave", icon: CalendarRange },
+    { label: "Explain absence / late", href: "/reasons", icon: CalendarCheck },
     { label: "My identity", href: "/identity", icon: Fingerprint },
   ],
   admin: [

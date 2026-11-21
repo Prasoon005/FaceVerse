@@ -32,6 +32,8 @@ export function AbsenceAnswerDialog({
   day,
   question,
   initialReason,
+  kind = "absence",
+  lateBy = 0,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -39,6 +41,9 @@ export function AbsenceAnswerDialog({
   day: string;
   question?: string | null;
   initialReason?: string | null;
+  /** A reason for an absence, or for checking in late. */
+  kind?: "absence" | "late";
+  lateBy?: number;
 }) {
   const { play } = useSoundFeedback();
   const [reason, setReason] = useState(initialReason ?? "");
@@ -69,7 +74,7 @@ export function AbsenceAnswerDialog({
     setSaving(true);
     try {
       const proofPath = await uploadProof();
-      const result = await answerAbsence({ day, reason, proofPath });
+      const result = await answerAbsence({ day, kind, reason, proofPath });
       if (!result.ok) throw new Error(result.error);
       play("success");
       toast.success("Reason sent to your admin");
@@ -88,9 +93,16 @@ export function AbsenceAnswerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Absence on {formatDay(day, { weekday: "long" })}</DialogTitle>
+          <DialogTitle>
+            {kind === "late"
+              ? `Late on ${formatDay(day, { weekday: "long" })}${lateBy ? ` (${lateBy} min)` : ""}`
+              : `Absence on ${formatDay(day, { weekday: "long" })}`}
+          </DialogTitle>
           <DialogDescription>
-            {question ?? "Explain why you were absent. Your admin will approve or reject it."}
+            {question ??
+              (kind === "late"
+                ? "Explain why you came late. If your admin approves it, no points are deducted."
+                : "Explain why you were absent. If your admin approves it, it counts as excused.")}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4">
@@ -102,7 +114,11 @@ export function AbsenceAnswerDialog({
               onChange={(e) => setReason(e.target.value)}
               rows={4}
               maxLength={1000}
-              placeholder="e.g. I had a fever and visited the doctor."
+              placeholder={
+                kind === "late"
+                  ? "e.g. My bus broke down on the way."
+                  : "e.g. I had a fever and visited the doctor."
+              }
             />
           </div>
           <div className="grid gap-2">

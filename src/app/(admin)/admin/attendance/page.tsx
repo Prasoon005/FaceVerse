@@ -4,6 +4,7 @@ import { AttendanceReport, type ReportRow } from "@/components/admin/attendance-
 import { LiveUpdates } from "@/components/admin/live-updates";
 import { PageHeader } from "@/components/shared/page-header";
 import { listWorkspaceUsers, loadApprovedLeave } from "@/lib/admin/data";
+import { computeScore, lateMinutes } from "@/lib/attendance/score";
 import { getAttendanceSettings, requireAdminPage } from "@/lib/admin/server";
 import {
   addDays,
@@ -59,8 +60,10 @@ export default async function AdminAttendancePage({
     const cells = days.map((day) => {
       const record = attendanceMap.get(`${u.id}:${day}`) ?? null;
       const review = reviewMap.get(`${u.id}:${day}`) ?? null;
+      const lateBy = record ? lateMinutes(record.check_in_at, settings) : 0;
       return {
         day,
+        lateBy,
         status: dayStatus({
           day,
           today,
@@ -69,6 +72,7 @@ export default async function AdminAttendancePage({
           attendance: record,
           review,
           onLeave: leave.get(u.id)?.has(day) ?? false,
+          late: lateBy > 0,
         }),
         checkInAt: record?.check_in_at ?? null,
         checkOutAt: record?.check_out_at ?? null,
@@ -84,6 +88,16 @@ export default async function AdminAttendancePage({
       cells,
       summary,
       rate: attendanceRate(summary),
+      score: computeScore(
+        cells.map((c) => ({
+          day: c.day,
+          status: c.status,
+          lateBy: c.lateBy,
+          reviewStatus: c.reviewStatus,
+        })),
+        settings,
+      ).score,
+      scoreBase: settings.score_base,
     };
   });
 
@@ -91,7 +105,7 @@ export default async function AdminAttendancePage({
     <div className="grid gap-6">
       <PageHeader
         title="Attendance report"
-        description="Who was present or absent each day. Click an absent day to ask for a reason."
+        description="Present, late or absent each day, with the deduction score. Click an absent or late day to ask for a reason."
         actions={<LiveUpdates />}
       />
       <AttendanceReport

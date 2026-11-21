@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { RecognitionsChart } from "@/components/charts/recognitions-chart";
+import { LiveUpdates } from "@/components/admin/live-updates";
 import { WelcomeHero } from "@/components/dashboard/welcome-hero";
 import { ConfidenceRing } from "@/components/shared/confidence-ring";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -16,6 +17,8 @@ import { getDashboardData } from "@/lib/data/dashboard";
 import { formatDateTime, formatPercent, formatRelative } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard" };
+
+const LIVE_TABLES = ["visitor_logs", "attendance", "people"];
 
 const quickActions = [
   { label: "Enroll new person", href: "/enroll", icon: UserPlus },
@@ -47,7 +50,7 @@ export default async function DashboardPage() {
       value: stats.visitorsToday,
       icon: DoorOpen,
       tone: "warning",
-      hint: "Visitor log arrives in Phase 4",
+      hint: "Check-ins, last 24 hours",
     },
     {
       label: "Unknown faces",
@@ -65,11 +68,14 @@ export default async function DashboardPage() {
         title="Recognition overview"
         description="Overview of enrolments, recognitions and visitors."
         actions={
-          <Button asChild>
-            <Link href="/enroll">
-              <UserPlus aria-hidden /> Enroll person
-            </Link>
-          </Button>
+          <>
+            <LiveUpdates tables={LIVE_TABLES} />
+            <Button asChild>
+              <Link href="/enroll">
+                <UserPlus aria-hidden /> Enroll person
+              </Link>
+            </Button>
+          </>
         }
       />
 

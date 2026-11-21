@@ -19,6 +19,7 @@ const PROTECTED_PREFIXES = [
   "/settings",
   "/attendance",
   "/leave",
+  "/reasons",
   "/announcements",
   "/identity",
 ];

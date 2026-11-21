@@ -39,7 +39,8 @@ export function AbsenceQuestions({
             </span>
             <div className="grid min-w-0 flex-1 gap-0.5">
               <p className="text-sm font-medium">
-                Your admin asked about {formatDay(review.day, { weekday: "long" })}
+                Your admin asked about {review.kind === "late" ? "coming late on " : ""}
+                {formatDay(review.day, { weekday: "long" })}
               </p>
               <p className="truncate text-sm text-muted-foreground">
                 {review.question} · {formatRelative(review.asked_at)}
@@ -60,6 +61,7 @@ export function AbsenceQuestions({
           day={answering.day}
           question={answering.question}
           initialReason={answering.reason}
+          kind={answering.kind}
         />
       ) : null}
     </>

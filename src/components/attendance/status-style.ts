@@ -1,4 +1,5 @@
 import {
+  AlarmClock,
   CalendarClock,
   CalendarOff,
   CircleCheck,
@@ -19,6 +20,11 @@ export const statusStyle: Record<DayStatus, { cell: string; dot: string; icon: L
     cell: "bg-success/15 text-success-foreground border-success/30",
     dot: "bg-success",
     icon: CircleCheck,
+  },
+  late: {
+    cell: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
+    dot: "bg-orange-500",
+    icon: AlarmClock,
   },
   absent: {
     cell: "bg-danger/15 text-danger-foreground border-danger/30",
@@ -64,4 +70,6 @@ export type CalendarDay = {
   checkInAt: string | null;
   checkOutAt: string | null;
   review: import("@/types/database").AbsenceReview | null;
+  /** Minutes late (0 = on time or absent). */
+  lateBy?: number;
 };

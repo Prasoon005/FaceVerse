@@ -25,6 +25,8 @@ const LABELS: Record<string, string> = {
   "identity.change_request": "asked to change their identity",
   "leave.request": "requested leave",
   "attendance.answer_absence": "explained an absence",
+  "attendance.answer_late": "explained a late arrival",
+  "admin.update_scoring_rules": "changed office hours / score rules",
   "person.enroll": "enrolled a person",
   "person.add_samples": "added samples to a person",
   "person.delete": "deleted a person",

@@ -1,4 +1,6 @@
+import { AlarmClock } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AbsenceQuestions } from "@/components/attendance/absence-questions";
@@ -20,6 +22,7 @@ import {
   monthRange,
   summarize,
 } from "@/lib/attendance/days";
+import { lateMinutes } from "@/lib/attendance/score";
 
 export const metadata: Metadata = { title: "Attendance" };
 
@@ -74,8 +77,10 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
   const days: CalendarDay[] = eachDay(from, to).map((day) => {
     const record = byDay.get(day) ?? null;
     const review = reviewByDay.get(day) ?? null;
+    const lateBy = record ? lateMinutes(record.check_in_at, settings) : 0;
     return {
       day,
+      lateBy,
       status: dayStatus({
         day,
         today,
@@ -84,6 +89,7 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
         attendance: record,
         review,
         onLeave: leaveDays.has(day),
+        late: lateBy > 0,
       }),
       checkInAt: record?.check_in_at ?? null,
       checkOutAt: record?.check_out_at ?? null,
@@ -119,6 +125,9 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
     );
   const monthSummary = summarize(days.map((d) => d.status));
 
+  const todayCell = days.find((d) => d.day === today);
+  const lateToday = todayCell?.status === "late" && !todayCell.review ? (todayCell.lateBy ?? 0) : 0;
+
   const people = linked.data ?? [];
   const enrollment = people.some((p) => p.approval_status === "approved")
     ? "approved"
@@ -141,6 +150,19 @@ export default async function AttendancePage({ searchParams }: PageProps<"/atten
         present={monthSummary.present}
         leave={monthSummary.leave}
       />
+      {lateToday ? (
+        <Link
+          href="/reasons"
+          className="hover-lift flex flex-wrap items-center gap-3 rounded-xl border border-orange-500/40 bg-orange-500/5 p-4 text-sm"
+        >
+          <AlarmClock className="size-5 animate-pulse text-orange-500" aria-hidden />
+          <span className="flex-1">
+            You checked in <strong>{lateToday} min late</strong> today. Send a reason so your admin
+            can excuse it and you keep your points.
+          </span>
+          <span className="font-medium text-brand">Explain →</span>
+        </Link>
+      ) : null}
       <AbsenceQuestions
         reviews={(reviews.data ?? []).filter((r) => r.status === "asked")}
         userId={user.id}

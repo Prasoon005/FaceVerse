@@ -6,11 +6,27 @@ import { notFound } from "next/navigation";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_OFFICE, DEFAULT_RULES } from "@/lib/attendance/score";
 import type { AttendanceSettings } from "@/types/database";
 
-export const DEFAULT_SETTINGS: Pick<AttendanceSettings, "work_days" | "timezone"> = {
+export type WorkspaceSettings = Pick<
+  AttendanceSettings,
+  | "work_days"
+  | "timezone"
+  | "work_start"
+  | "late_grace_minutes"
+  | "score_base"
+  | "deduct_absent"
+  | "deduct_late"
+  | "deduct_excused"
+  | "deduct_late_excused"
+>;
+
+export const DEFAULT_SETTINGS: WorkspaceSettings = {
   work_days: [1, 2, 3, 4, 5, 6],
   timezone: "Asia/Kolkata",
+  ...DEFAULT_OFFICE,
+  ...DEFAULT_RULES,
 };
 
 /** The signed-in user and their profile, or null when signed out. */
@@ -61,11 +77,21 @@ export async function requireMember() {
 
 export async function getAttendanceSettings(
   client: ReturnType<typeof createAdminClient> | Awaited<ReturnType<typeof createClient>>,
-) {
-  const { data } = await client
-    .from("attendance_settings")
-    .select("work_days, timezone")
-    .eq("id", 1)
-    .maybeSingle();
-  return data ?? DEFAULT_SETTINGS;
+): Promise<WorkspaceSettings> {
+  const { data } = await client.from("attendance_settings").select("*").eq("id", 1).maybeSingle();
+  if (!data) return DEFAULT_SETTINGS;
+  // Columns from newer migrations may be missing on an older database: fall back to defaults.
+  const num = (v: unknown, fallback: number) =>
+    v === null || v === undefined ? fallback : Number(v);
+  return {
+    work_days: data.work_days ?? DEFAULT_SETTINGS.work_days,
+    timezone: data.timezone ?? DEFAULT_SETTINGS.timezone,
+    work_start: data.work_start ?? DEFAULT_SETTINGS.work_start,
+    late_grace_minutes: num(data.late_grace_minutes, DEFAULT_SETTINGS.late_grace_minutes),
+    score_base: num(data.score_base, DEFAULT_SETTINGS.score_base),
+    deduct_absent: num(data.deduct_absent, DEFAULT_SETTINGS.deduct_absent),
+    deduct_late: num(data.deduct_late, DEFAULT_SETTINGS.deduct_late),
+    deduct_excused: num(data.deduct_excused, DEFAULT_SETTINGS.deduct_excused),
+    deduct_late_excused: num(data.deduct_late_excused, DEFAULT_SETTINGS.deduct_late_excused),
+  };
 }

@@ -6,6 +6,7 @@ import type { AbsenceReview, Attendance } from "@/types/database";
 
 export type DayStatus =
   | "present"
+  | "late"
   | "absent"
   | "excused"
   | "leave"
@@ -17,6 +18,7 @@ export type DayStatus =
 
 export const dayStatusLabels: Record<DayStatus, string> = {
   present: "Present",
+  late: "Late",
   absent: "Absent",
   excused: "Excused",
   leave: "On leave",
@@ -30,6 +32,7 @@ export const dayStatusLabels: Record<DayStatus, string> = {
 /** Short code used in the report grid and CSV. */
 export const dayStatusCodes: Record<DayStatus, string> = {
   present: "P",
+  late: "T",
   absent: "A",
   excused: "E",
   leave: "L",
@@ -106,6 +109,7 @@ export function dayStatus({
   attendance,
   review,
   onLeave = false,
+  late = false,
 }: {
   day: string;
   today: string;
@@ -116,8 +120,10 @@ export function dayStatus({
   review?: Pick<AbsenceReview, "status"> | null;
   /** The day falls inside an approved leave request. */
   onLeave?: boolean;
+  /** Checked in after the office start + grace. An approved late reason counts as present. */
+  late?: boolean;
 }): DayStatus {
-  if (attendance) return "present";
+  if (attendance) return late && review?.status !== "approved" ? "late" : "present";
   const workday = workDays.includes(isoWeekday(day));
   if (onLeave && workday && day >= joinedDay) return "leave";
   if (day > today) return "upcoming";
@@ -139,10 +145,11 @@ export function summarize(statuses: readonly DayStatus[]): StatusSummary {
   return summary;
 }
 
-/** Present share of the days that counted (present + absent + excused + pending). */
+/** Present share (late counts as present) of the days that counted. */
 export function attendanceRate(summary: StatusSummary): number | null {
-  const counted = summary.present + summary.absent + summary.excused + summary.pending;
-  return counted === 0 ? null : summary.present / counted;
+  const attended = summary.present + summary.late;
+  const counted = attended + summary.absent + summary.excused + summary.pending;
+  return counted === 0 ? null : attended / counted;
 }
 
 /** Every day covered by the given (approved) leave ranges. */
@@ -167,7 +174,7 @@ export function countWorkdays(from: string, to: string, workDays: readonly numbe
 export function currentStreak(statusesNewestFirst: readonly DayStatus[]): number {
   let streak = 0;
   for (const s of statusesNewestFirst) {
-    if (s === "present") streak++;
+    if (s === "present" || s === "late") streak++;
     else if (s === "off" || s === "today" || s === "upcoming" || s === "leave") continue;
     else break;
   }
