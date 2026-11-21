@@ -1,300 +1,240 @@
 # FaceVerse
 
-**Multi-modal identity & recognition platform.** Face recognition, voice recognition and
-multi-face detection for everyday problems: passwordless sign-in, visitor logs for
-hostels/societies/offices, finding yourself in event photos, privacy-blurring photos and focus
-tracking.
+**Face, voice and attendance in one private workspace.** FaceVerse is a multi-modal identity
+platform: people sign in with their face and voice, mark attendance in seconds, and teams run
+leave, absence reviews, visitor logs, announcements and messaging from a separate admin console.
 
-All AI models run **on your device** (WebGL/WASM in Web Workers). The backend only stores numeric
-embeddings, needs no GPU and runs entirely on free tiers.
+Every AI model runs **on the device** (WebGL / WebAssembly in Web Workers). The server only stores
+numeric embeddings, needs no GPU, and the whole stack runs on free tiers.
+
+**Live:** <https://face-verse-two.vercel.app> · **Author:** [Prasoon Katiyar](https://github.com/Prasoon005)
 
 > **Security note:** browser-side biometrics are a demo-grade second factor, not bank-grade
 > security. Password and Google sign-in always remain available; biometric login is opt-in.
 
-Author: [Prasoon Katiyar](https://github.com/Prasoon005)
-
-<!-- Screenshots: add once deployed -->
-<!-- ![Landing page](docs/screenshots/landing.png) -->
-<!-- ![Dashboard](docs/screenshots/dashboard.png) -->
-
 ---
 
-## Status
+## Contents
 
-| Phase | Scope                                                      | Status   |
-| ----- | ---------------------------------------------------------- | -------- |
-| 1     | Foundation & UI shell, auth, database, CI                  | ✅ Done  |
-| 2     | Face engine, enrollment, live multi-face recognition       | ✅ Done  |
-| 3     | Voice engine + multi-factor biometric login                | ✅ Done  |
-| 4A    | Admin portal, final identity, attendance, leave, kiosk     | ✅ Built |
-| 4B    | Smart visitor log                                          | ✅ Built |
-| 5     | Event photo finder                                         | ✅ Built |
-| 6     | Privacy, polish & v1 release                               | ✅ Built |
-| 7+    | Stretch: compare, auto-tag, blur, focus, voice commands, … | ✅ Most  |
+- [Highlights](#highlights)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Getting started](#getting-started)
+- [Deploying](#deploying-free)
+- [Scripts](#scripts)
+- [Project structure](#project-structure)
+- [Privacy and security](#privacy-and-security)
+- [Limitations](#limitations)
 
-See [docs/CHANGELOG.md](docs/CHANGELOG.md) for what changed in each phase and
-[docs/phases/](docs/phases/) for each phase's test checklist.
+## Highlights
+
+- **On-device AI:** face (1024-d) and voice (512-d) embeddings are computed in the browser. Raw
+  video and audio never leave the device.
+- **Two portals:** members use `/login`; admins have their own sign-in (`/admin/login`) and console.
+- **Locked identity:** a member's face (and optional voice) is locked after enrollment. Changing
+  it needs an admin-approved request.
+- **Attendance that runs itself:** face check-in and check-out, late marks, leave, holidays,
+  absence reasons and a monthly deduction score that follows your company's rules.
+- **Apple-style glass UI:** light and dark themes, glow effects in dark mode, accent colours,
+  installable as an app (PWA), and a layout that fits phones, tablets and desktops.
+- **Live everywhere:** Supabase Realtime pushes check-ins, approvals and messages instantly.
 
 ## Features
 
-**Phases 5–7: photo finder, privacy, tools**
+### Members
 
-- **Event photo finder:** upload an album (faces indexed in the browser), take a selfie, get every
-  photo you're in, download them as a ZIP; public share links let guests do the same
-- **Privacy:** consent before enrollment, export my data (JSON), delete all my biometrics,
-  storage usage meter, activity timeline
-- **Tools:** 1:1 face compare, privacy blur, focus/drowsiness tracker, voice commands, duplicate
-  enrollment warning, watchlist alerts for flagged people, installable PWA
+| Area                           | What you can do                                                                                                                                                  |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sign in**                    | Email and password, Google, or **face + voice** biometric login (liveness, face, voice, challenge phrase)                                                        |
+| **My identity**                | Guided face capture with live quality checks and an optional voice step. Locked after a final confirmation, with change requests sent to an admin                |
+| **Attendance**                 | Liveness and face check on your own phone: the first scan checks you in, the second checks you out. Calendar, insights and an optional **office location check** |
+| **Dashboard**                  | Greeting with a live clock, attendance and score rings, a **6-month heatmap** with current and best streaks                                                      |
+| **Leave and reasons**          | Request leave. Explain an absence or a late day with an optional proof photo. See your **deduction score**                                                       |
+| **Messages and announcements** | Real-time chat with admins and announcement pop-ups                                                                                                              |
+| **Recognition tools**          | Live multi-face recognition, people directory, enrollment, smart visitor log                                                                                     |
+| **Albums**                     | Event photo finder: take a selfie to find every photo you're in, download as ZIP, share links for guests                                                         |
+| **Tools**                      | 1:1 face compare, privacy blur, focus tracker, voice commands                                                                                                    |
+| **Profile and settings**       | Photo upload, phone and department. Theme (light, dark, auto) and **accent colour**. Security (biometric login) and privacy (export or delete my data)           |
 
-**Phase 4B: smart visitor log**
+### Admins
 
-- **Scan visitor:** returning visitors are recognised and checked in with one click (history and
-  last details pre-filled); new visitors get a quick form and are recognised next time
-- Check-in / check-out, flagged-person warning, optional private snapshot
-- Visitor log with date / status / search filters, CSV export for Excel, live dashboard and bell
-- Admins see every user's visitor log
-
-**Phase 4A: admin portal + attendance**
-
-- **Two portals:** users sign in at `/login`; admins have their own sign-in (`/admin/login`) and
-  console. Users only ever see their own data; admins see and manage everyone
-- **My identity** (`/identity`): users enroll their face + voice once; after a "these are final"
-  confirmation it's **locked**. Changing it needs a request that an admin approves (one
-  re-enrollment). An admin also approves each enrollment before it counts
-- **Face attendance** (`/attendance`): liveness + face check on your own phone, verified on the
-  server; first scan = check-in, second = check-out. Calendar, streak and monthly rate
-- **Kiosk mode:** a shared device at the door recognises anyone with an approved identity
-- **Leave requests** and **absence reviews** (reason + optional proof), decided by the admin
-- **Announcements** to everyone or one user, with live pop-ups for important ones
-- **Admin console:** dashboard with to-dos, analytics charts, users (with a detail page), approvals,
-  change requests, attendance report with CSV export, leave, reviews, audit log, settings
-- **Live updates** everywhere (Supabase Realtime) with sound and animation
-
-**Phase 3: voice + biometric login**
-
-- On-device voice engine: [Transformers.js](https://huggingface.co/docs/transformers.js) running
-  the `Xenova/wavlm-base-plus-sv` speaker-verification model in a Web Worker (512-d embeddings)
-- **MicRecorder** with a live waveform, 16 kHz resampling and energy-based silence trimming
-  (needs at least 2 s of speech)
-- **Challenge phrases** (3 random words + 2 digits), checked with the Web Speech API where the
-  browser supports it
-- Voice step in the enrollment wizard (3 phrases, optional for new people) and "Add voice" for
-  existing people
-- **Biometric login** (`/biometric-login`): email, then liveness, then face, then voice. The
-  `/api/biometric-login` route re-verifies the embeddings with the service role, rate-limits
-  (5 failures / 15 min per account), logs every attempt and issues the session
-- **Settings → Security:** turn biometric login on or off (needs a linked person with face and
-  voice samples) and see recent attempts with their scores
-- **Motion and sound across the app:** page transitions, count-up stats, scan lines, camera flash,
-  voiceprint animation and soft synthesized sound cues, with a mute button in the top bar. Respects
-  the OS reduce-motion setting
-
-**Phase 2: face recognition**
-
-- On-device face engine ([Human](https://github.com/vladmandic/human)) in a Web Worker: detection,
-  1024-d face descriptor, mesh, iris, emotion. WebGL with a WASM fallback
-- Model loading progress, device camera permission handling and graceful error states
-- **Enrollment wizard:** details, then guided face capture (straight, one side, other side) with
-  live quality chips (size, sharpness, pose, confidence, single face) and auto-capture, then review
-- **People:** searchable, sortable table with avatar, samples and last seen; detail page with
-  samples, recognition history, add samples and delete
-- **Live recognition:** every face in frame tracked and matched via pgvector, with name tags, a
-  green/amber/red confidence ring, an "in frame" panel, pause, snapshot, camera switch and FPS
-- **Liveness check** (random blink / turn / smile challenges), reusable for biometric login
-- Dashboard stats, a 14-day recognitions chart and activity feed now use real data
-
-**Phase 1: foundation**
-
-- Landing page with an animated, original face-mesh visual
-- Email/password sign-up and login, Google OAuth
-- Protected app area with collapsible sidebar, mobile drawer, breadcrumbs, `Ctrl/⌘ + K` command
-  palette, toasts, notifications bell and user menu
-- Dark (default) and light themes
-- Dashboard with stat cards, empty states and quick actions
-- Supabase Postgres schema (pgvector) with Row Level Security on every table
-- `/api/health` endpoint + GitHub Actions keep-alive so the free Supabase project never pauses
-- CI: lint, format check, typecheck and unit tests on every push/PR
-
-**Not built yet:** group photo auto-tagging, two-person verification, video blur, offline mode.
+| Area                   | What you can do                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Overview**           | To-dos, live stats, **live activity feed**, today's check-ins with avatar status rings, absentees with "ask for a reason" |
+| **Users**              | Search, roles, disable or delete. A **quick-view drawer** shows attendance, score and contact details                     |
+| **Approvals**          | Approve enrollments and identity change requests                                                                          |
+| **Attendance report**  | Users by days grid with export as **daily CSV, summary CSV (payroll) or a PDF report**                                    |
+| **Reviews and leave**  | Decide absence and late reasons, and leave requests                                                                       |
+| **Analytics**          | Attendance trend and weekday charts, top and bottom attendance                                                            |
+| **Kiosk mode**         | One shared screen at the door recognises everyone with an approved identity                                               |
+| **Communication**      | Announcements (everyone or one person) and a messaging inbox                                                              |
+| **Workspace settings** | Working days, timezone, office hours, late grace, scoring rules, **holiday calendar**, **office geofence**                |
+| **Audit log**          | Every admin action, with a readable timeline                                                                              |
 
 ## Tech stack
 
-| Layer          | Choice                                                          |
-| -------------- | --------------------------------------------------------------- |
-| Framework      | Next.js 16 (App Router) + TypeScript (strict)                   |
-| Styling        | Tailwind CSS v4 + shadcn/ui (Radix), CSS-variable design tokens |
-| Icons / Motion | lucide-react, Framer Motion                                     |
-| Face AI        | @vladmandic/human in a Web Worker (Comlink)                     |
-| Voice AI       | Transformers.js (WavLM x-vector) in a Web Worker (Comlink)      |
-| Tables         | TanStack Table v9                                               |
-| Charts         | Recharts                                                        |
-| Forms          | react-hook-form + zod                                           |
-| State          | Zustand (client), TanStack Query (server)                       |
-| Theme          | next-themes                                                     |
-| Backend        | Supabase: Auth, Postgres + pgvector, Storage, Realtime          |
-| Testing        | Vitest + React Testing Library (Playwright in Phase 6)          |
-| CI / Hosting   | GitHub Actions, Vercel Hobby, Supabase Free                     |
+| Layer        | Choice                                                                                                      |
+| ------------ | ----------------------------------------------------------------------------------------------------------- |
+| Framework    | Next.js 16 (App Router, `proxy.ts`) and TypeScript (strict)                                                 |
+| UI           | Tailwind CSS v4, shadcn/ui (Radix), Geist font, Framer Motion, lucide-react                                 |
+| Face AI      | [@vladmandic/human](https://github.com/vladmandic/human) in a Web Worker (Comlink)                          |
+| Voice AI     | [Transformers.js](https://huggingface.co/docs/transformers.js), WavLM speaker verification, in a Web Worker |
+| Data         | TanStack Query, TanStack Table, Zustand, react-hook-form and zod                                            |
+| Charts       | Recharts (validated colourblind-safe palette)                                                               |
+| Backend      | Supabase: Auth, Postgres and pgvector, Storage, Realtime, Row Level Security                                |
+| Testing      | Vitest and React Testing Library (137 unit tests)                                                           |
+| CI / Hosting | GitHub Actions (lint, format, typecheck, tests), Vercel Hobby, Supabase Free                                |
+
+## Architecture
+
+```text
+Browser (Next.js client)                           Supabase
++-------------------------------+                 +------------------------------+
+| Camera / Mic                  |                 | Auth (email, Google)         |
+|   -> Web Workers              |   embeddings    | Postgres + pgvector          |
+|      Human (face, 1024-d)     | --------------> |   match_faces / verify_face  |
+|      WavLM (voice, 512-d)     |                 |   RLS on every table         |
+| UI: App Router + glass design | <-------------- | Realtime (live updates)      |
++-------------------------------+   rows, events  | Storage (private buckets)    |
+            |                                     +------------------------------+
+            v                                                ^
+Next.js server (Vercel): Server Components, Server Actions,  |
+API routes (attendance, kiosk, biometric login), proxy.ts ---+  service role only after
+                                                                 requireAdmin()/getViewer()
+```
+
+More detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). The full project report is in
+[docs/FaceVerse_Project_Report.pdf](docs/FaceVerse_Project_Report.pdf).
 
 ## Getting started
 
 ### Prerequisites
 
 - Node.js 20.9+ (22 recommended)
-- A free [Supabase](https://supabase.com) account
-- (Optional) A Google Cloud project for Google sign-in — free
+- A free [Supabase](https://supabase.com) project
+- Optional: a Google Cloud OAuth client for Google sign-in (free)
 
 ### 1. Install
 
 ```bash
-npm install          # also copies face models + ONNX Runtime files into public/ (postinstall)
+npm install          # also copies face models and ONNX Runtime files into public/
 cp .env.example .env.local
 ```
 
-### 2. Create the Supabase project
+### 2. Environment variables
 
-1. Create a new project at <https://supabase.com/dashboard> (free tier).
-2. **Project Settings → API**: copy the **Project URL**, the **anon public** key and the
-   **service_role** key into `.env.local`:
+From Supabase **Project Settings → API**:
 
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
-   SUPABASE_SERVICE_ROLE_KEY=<service role key>   # server only, never commit
-   NEXT_PUBLIC_SITE_URL=http://localhost:3000
-   ```
-
-### 3. Run the database migrations
-
-Either paste each file into the Supabase **SQL Editor** in order:
-
-1. `supabase/migrations/0001_extensions.sql`
-2. `supabase/migrations/0002_core.sql`
-3. `supabase/migrations/0003_face_matching.sql` (match_faces RPC, people overview, avatars bucket)
-4. `supabase/migrations/0004_biometric_login.sql` (verify_face / verify_voice for biometric login)
-5. `supabase/migrations/0005_admin_attendance.sql` (approvals, attendance, absence reviews, settings)
-
-…or use the Supabase CLI:
-
-```bash
-npx supabase login
-npx supabase link --project-ref <project-ref>
-npx supabase db push
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon / publishable key>
+SUPABASE_SERVICE_ROLE_KEY=<service role / secret key>   # server only, never commit
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-### 4. Configure authentication
+### 3. Database migrations
 
-In **Authentication → URL Configuration**:
+Run each file in `supabase/migrations/` in the Supabase **SQL Editor**, in order:
 
-- **Site URL:** `http://localhost:3000` (change to your Vercel URL after deploying)
-- **Redirect URLs:** add `http://localhost:3000/auth/callback` (and later
-  `https://<your-app>.vercel.app/auth/callback`)
+| File                                 | Adds                                                             |
+| ------------------------------------ | ---------------------------------------------------------------- |
+| `0001_extensions.sql`                | pgvector and helpers                                             |
+| `0002_core.sql`                      | profiles, people, embeddings, recognition events, audit log, RLS |
+| `0003_face_matching.sql`             | `match_faces` RPC, people overview, avatars bucket               |
+| `0004_biometric_login.sql`           | `verify_face` / `verify_voice`, login attempts                   |
+| `0005_admin_attendance.sql`          | approvals, attendance, absence reviews, settings                 |
+| `0006_admin_portal.sql`              | locked identity, change requests, announcements, leave, kiosk    |
+| `0007_visitors.sql`                  | visitor log and snapshots bucket                                 |
+| `0008_late_and_score.sql`            | office hours, late marks, deduction score rules                  |
+| `0009_albums.sql`                    | albums, photo faces, share links                                 |
+| `0010_messages.sql`                  | member ⇄ admin messaging                                         |
+| `0011_holidays_geofence_profile.sql` | holidays, office geofence, phone and department                  |
 
-**Email:** With _Confirm email_ enabled (default) new users get a confirmation link; disable it
-under **Authentication → Providers → Email** for faster local testing.
+Or with the CLI: `npx supabase link --project-ref <ref>` then `npx supabase db push`.
 
-**Email template (recommended):** the default confirmation link only signs you in if it is opened in
-the same browser you signed up in. Switch it to a server-verified link so it works from the Gmail
-app or any browser. In **Authentication → Emails → Templates → Confirm signup**, replace the link
-with:
+### 4. Authentication settings
 
-```html
-<a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email&next=/dashboard">
-  Confirm your email
-</a>
-```
+In Supabase **Authentication → URL Configuration**:
 
-Do the same for **Magic Link** (`type=email`) if you use it later.
+- **Site URL:** your deployed URL (for example `https://face-verse-two.vercel.app`)
+- **Redirect URLs:** `https://<your-app>.vercel.app/**` and `http://localhost:3000/**`
 
-**Google (optional, free):**
+Email confirmation links land on a friendly **"Email confirmed"** page
+(`/auth/callback?next=/auth/confirmed`). For Google sign-in, create an OAuth client with the
+redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`, enable Google in Supabase,
+and **publish** the OAuth consent screen so everyone (not only test users) can sign in.
 
-1. In [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → Credentials**,
-   create an **OAuth client ID** (type _Web application_).
-2. Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
-3. In Supabase **Authentication → Providers → Google**, enable it and paste the client ID and
-   secret.
-
-### 5. Run it
+### 5. Run
 
 ```bash
 npm run dev
 ```
 
-Open <http://localhost:3000>, sign up, and you land on the dashboard.
-
-To make yourself an admin (needed for `/admin`), run in the SQL editor:
+Make yourself the first admin in the SQL Editor:
 
 ```sql
 update public.profiles set role = 'admin'
 where id = (select id from auth.users where email = 'you@example.com');
 ```
 
-After that, other admins can be made from **Admin → Users**.
+## Deploying (free)
+
+1. Push to GitHub and import the repo in [Vercel](https://vercel.com/new).
+2. Add the four environment variables. Mark `SUPABASE_SERVICE_ROLE_KEY` as **Sensitive**.
+3. Set the Supabase Site URL and Redirect URLs to the Vercel domain (see above).
+4. **Keep-alive:** add a GitHub Actions secret `HEALTH_URL` =
+   `https://<your-app>.vercel.app/api/health`, so the free Supabase project never pauses.
 
 ## Scripts
 
-| Command                | What it does                          |
-| ---------------------- | ------------------------------------- |
-| `npm run dev`          | Start the dev server (Turbopack)      |
-| `npm run build`        | Production build                      |
-| `npm run start`        | Serve the production build            |
-| `npm run lint`         | ESLint                                |
-| `npm run typecheck`    | Generate route types + `tsc --noEmit` |
-| `npm test`             | Vitest unit tests                     |
-| `npm run format`       | Prettier write                        |
-| `npm run format:check` | Prettier check (used in CI)           |
-| `npm run models:copy`  | Re-copy AI model/runtime files        |
-
-## Deploying (free)
-
-1. Push the repo to GitHub.
-2. Import it in [Vercel](https://vercel.com/new) (Hobby plan).
-3. Add the four environment variables from `.env.example`; set `NEXT_PUBLIC_SITE_URL` to your
-   Vercel URL. Mark `SUPABASE_SERVICE_ROLE_KEY` as **Sensitive**; biometric login needs it.
-4. In Supabase **Authentication → URL Configuration**, set the Site URL to the Vercel URL and add
-   `https://<your-app>.vercel.app/auth/callback` to the redirect list.
-5. **Keep-alive:** in GitHub → **Settings → Secrets and variables → Actions**, add a secret
-   `HEALTH_URL` = `https://<your-app>.vercel.app/api/health`. The `Keep Supabase alive` workflow
-   pings it every 3 days (you can also run it manually from the Actions tab).
+| Command                           | What it does                       |
+| --------------------------------- | ---------------------------------- |
+| `npm run dev`                     | Dev server (Turbopack)             |
+| `npm run build` / `npm start`     | Production build / serve it        |
+| `npm run lint`                    | ESLint                             |
+| `npm run typecheck`               | Route types and `tsc --noEmit`     |
+| `npm test`                        | Vitest unit tests                  |
+| `npm run format` / `format:check` | Prettier                           |
+| `npm run models:copy`             | Re-copy AI model and runtime files |
 
 ## Project structure
 
 ```text
-.github/workflows/   CI + keep-alive
-docs/                Architecture, changelog, privacy, per-phase checklists
-supabase/            SQL migrations + seed
-src/app/             Routes: (marketing), (auth), (app), api, auth callback
-src/components/      ui (shadcn), layout, shared, auth, marketing, camera, voice, enroll, people,
-                     live, charts, settings
-src/config/          site + navigation config
-src/lib/             ai (vector, liveness, quality, tracker, face/voice clients), audio (resample,
-                     silence trim, phrases, transcription), auth (biometric rules), data, supabase
-src/workers/         face.worker.ts (Human) and voice.worker.ts (Transformers.js), off the main thread
-src/hooks/           useCamera, useMicrophone, useFaceEngine, useVoiceEngine, useDetectionLoop
-scripts/             copy-models.mjs
-src/stores/          Zustand stores
-src/types/           Database types
-src/proxy.ts         Session refresh + auth redirects (Next 16 "proxy", formerly middleware)
-tests/               unit (Vitest) and e2e (Playwright, Phase 6)
+src/app/            Routes: (marketing) landing, (auth), (app) member portal,
+                    (admin) console, (admin-auth), api, auth callback, share
+src/components/     ui (shadcn), layout, fx (backdrop, clock, rings), dashboard, admin,
+                    attendance, identity, camera, voice, live, people, visitors, albums,
+                    messages, settings, marketing, shared
+src/lib/            ai, audio, attendance (days, score, geo), actions (Server Actions),
+                    admin, data, supabase, ui (accent, charts, theme transition)
+src/workers/        face.worker.ts (Human), voice.worker.ts (Transformers.js)
+src/proxy.ts        Session refresh and auth redirects (Next 16 "proxy")
+supabase/           SQL migrations
+tests/unit/         Vitest suites
+docs/               Architecture, privacy, changelog, phase checklists, project report
 ```
 
-More detail in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Privacy and security
 
-## Privacy
+- Models run in the browser; only embeddings are stored. A face embedding can't be turned back
+  into a photo.
+- **Row Level Security on every table.** Members only see their own data. The service-role
+  client is used only after the server verifies an active admin or member.
+- Private storage buckets with short-lived signed URLs (avatars, proofs, snapshots, albums).
+- Strict Content Security Policy and Permissions-Policy (camera, microphone and location for the
+  site itself only).
+- Consent before enrollment, export my data, and delete every biometric sample in one step.
 
-See [docs/PRIVACY.md](docs/PRIVACY.md). In short: models run in your browser, only embeddings are
-stored, every table has Row Level Security, and you can export or delete your biometric data.
+See [docs/PRIVACY.md](docs/PRIVACY.md).
 
 ## Limitations
 
-- Biometric checks run in the browser and are a convenience factor, not production-grade
-  biometric security.
-- Free Supabase limits apply (~500 MB database, 1 GB storage, 5 GB egress/month).
-- Face matching thresholds (`src/config/recognition.ts`) are starting values; tune them with
-  your own data. If the liveness "turn left/right" prompts feel swapped, flip `yawLeftSign`.
-- First visit to a camera page downloads ~12 MB of models; the first voice feature downloads
-  ~100 MB (both cached afterwards).
-- Voice threshold (0.80, calibrated from real logins) and phrase checking are starting values. Speech
-  transcription only works in browsers with the Web Speech API (Chrome, Edge, Safari); elsewhere
-  only the voice itself is checked.
-- Liveness and the phrase check run in the browser, so the server can only re-verify the
-  embeddings. That's why biometric login is an opt-in, demo-grade factor.
+- Browser biometrics are a convenience factor; liveness runs on the client, so the server can only
+  re-verify embeddings.
+- Thresholds in `src/config/recognition.ts` (face 0.65, voice 0.80) are calibrated starting values.
+- The first camera page downloads about 12 MB of models; the first voice feature about 100 MB
+  (cached afterwards).
+- Free-tier limits apply (Supabase: about 500 MB database, 1 GB storage).
+- Not built yet: group-photo auto-tagging, two-person verification, video blur, offline mode,
+  Playwright end-to-end tests.
